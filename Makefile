@@ -8,7 +8,6 @@ CFLAGS=-I./$(INC_DIR)
 
 DEPS=  #header files
 
-OBJ_FILES:=helloWorld.cpp
 OBJ_FILES+=patternTest.cpp
 
 $(OBJ_DIR)/%.o: %.cpp $(DEPS)
