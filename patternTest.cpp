@@ -10,7 +10,9 @@
 using namespace std;
 
 void readPatterns(string patternFile);
+void printPatterns();
 void readEvents(string eventFile);
+void printEvents();
 
 struct PatternHeader {
     unsigned int nHitPatt;
@@ -22,6 +24,12 @@ struct EventHeader {
     int nEvents;
 };
 
+vector<int> hashId_array;
+vector<unsigned short> layerSet;
+vector<unsigned short*> layerSetGroupBegin;
+vector<unsigned char> hitArray;
+vector<unsigned char*> hitArrayGroupBegin;
+PatternHeader patternHeader;
 
 int main(int argc, char* argv[]) {
 
@@ -39,97 +47,59 @@ int main(int argc, char* argv[]) {
     }
 
     readPatterns(patternFile);
+    printPatterns();
     readEvents(eventFile);
 
     return 0;
 }
 
-
 void readPatterns(string patternFile){
     ifstream input(patternFile.c_str(),ifstream::binary);
     ostream_iterator<int> int_out (cout, " ");
-    PatternHeader header;
+    int nPattInGrp;
 
     if (input) {
         cout << "\nReading pattern file " << patternFile << endl;
  
         // Read header 
-        input.read((char*)&header, sizeof(header));
-        cout << "\nnHitPatt: " << header.nHitPatt;
-        cout << " nGroups: " << header.nGroups;
-        cout << " nLayers: " << header.nLayers << endl;
+        input.read((char*)&patternHeader, sizeof(patternHeader));
 
-        // Declare vectors and temp variables
-        // Group record
-        vector<int> hashId_array;
-        vector<int> temp_hashId_array(header.nLayers);
-        vector<int> nPattInGrp;
-        int temp_nPattInGrp;
-        // Pattern record
-        vector<unsigned short> layerSet;
-        unsigned short temp_layerSet;
-        vector<unsigned char> hitArray;
-        vector<unsigned char> temp_hitArray(header.nLayers);
+        // Resize vectors according to header values
+        hashId_array.resize(patternHeader.nGroups*patternHeader.nLayers);
+        layerSet.resize(patternHeader.nHitPatt);
+        layerSetGroupBegin.resize(patternHeader.nGroups);
+        hitArray.resize(patternHeader.nHitPatt*patternHeader.nLayers);
+        hitArrayGroupBegin.resize(patternHeader.nGroups);
 
-        int groupCount;
-        int patternCount;
+        // Initialise pointers to beginning of layerSet and hitArray vectors
+        unsigned short* currentLayerSet = &layerSet[0];
+        unsigned char* currentHitArray = &hitArray[0];
 
         // Loop through groups
-        groupCount = 0;
-        for (int i = 0; i < header.nGroups; i++) {
-            groupCount++;
-            cout << "\nReading group " << i + 1 << " of " << header.nGroups << endl;
+        for (int i = 0; i < patternHeader.nGroups; i++) {
+            // Set pointers to the beginning of current group in layerSet and hitArray vectors
+            layerSetGroupBegin[i] = currentLayerSet;
+            hitArrayGroupBegin[i] = currentHitArray;
 
-            // Read and print hashId_array
-            input.read((char*)&temp_hashId_array.front(), sizeof(int)*header.nLayers);
-            cout << "hashId_array: ";
-            copy(temp_hashId_array.begin(), temp_hashId_array.end(), int_out);
-            cout << endl;
-            hashId_array.insert(hashId_array.end(), temp_hashId_array.begin(), temp_hashId_array.end());
-
-            // Read and print nPattInGrp
-            input.read((char*)&temp_nPattInGrp, sizeof(temp_nPattInGrp));
-            cout << "nPattInGrp: " << temp_nPattInGrp << endl;
-            nPattInGrp.insert(nPattInGrp.end(), temp_nPattInGrp);
+            // Read group fields
+            input.read((char*)&hashId_array[i*patternHeader.nLayers], sizeof(int)*patternHeader.nLayers);
+            input.read((char*)&nPattInGrp, sizeof(nPattInGrp));
 
             //Loop through patterns
-            patternCount = 0;
-	    for (int j = 0; j < temp_nPattInGrp; j++) {
-                patternCount++;
-                cout << "Reading pattern " << j + 1 << " of " << temp_nPattInGrp << " (Group " << i + 1 << ")" << endl;
+	    for (int j = 0; j < nPattInGrp; j++) {
  
-                // Read and print layerSet
-                input.read((char*)&temp_layerSet, sizeof(temp_layerSet));
-                cout << "layerSet: " << bitset<16>(temp_layerSet) << endl;
-                layerSet.insert(layerSet.end(), temp_layerSet);
-            
-                // Read and print hitArray
-                input.read((char*)&temp_hitArray.front(), header.nLayers);
-                cout << "hitArray: ";
-                //copy(temp_hitArray.begin(), temp_hitArray.end(), int_out);
-                for (int k = 0; k < header.nLayers; k++) {
-                    cout << bitset<8>(temp_hitArray[k]) << ' ';
-                }
-                cout << endl;
-                hitArray.insert(hitArray.end(), temp_hitArray.begin(), temp_hitArray.end());
-            }
-            if (patternCount != temp_nPattInGrp) {
-                cerr << "Error: Number of patterns read is incorrect for group " << i + 1 << endl;
-                input.close();
-                exit(EXIT_FAILURE);
+                // Read pattern fields and advance pointers
+                input.read((char*)currentLayerSet, sizeof(unsigned short));
+                currentLayerSet++;
+                input.read((char*)currentHitArray, patternHeader.nLayers);
+                currentHitArray += patternHeader.nLayers;
             }
         }
-        if (groupCount != header.nGroups) {
-            cerr << "Error: Number of groups read is incorrect" << endl;
-            input.close();
-            exit(EXIT_FAILURE);
-        }
-
         if (input.peek() == EOF) {
-            cout << "\nFinished reading " << patternFile << endl;
+            cout << "Finished reading " << patternFile << endl;
             input.close();
         } else {
-            cerr << "\nError: Finished reading groups but did not reach end of file" << endl;
+            cerr << "Error: Finished reading groups but did not reach end of file" << endl;
             input.close();
             exit(EXIT_FAILURE);
         }
@@ -139,7 +109,45 @@ void readPatterns(string patternFile){
         cerr << "Error reading pattern file " << patternFile << endl;
     }
 }
-void readEvents(string eventFile){
+
+void printPatterns() {
+
+    int nPattInGrp;
+    unsigned short* layerSetGroupEnd;
+
+    // Print header
+    cout << "\nnHitPatt: " << patternHeader.nHitPatt;
+    cout << " nGroups: " << patternHeader.nGroups;
+    cout << " nLayers: " << patternHeader.nLayers << endl;
+
+    // Loop through groups
+    for (int g = 0; g < patternHeader.nGroups; g++) {
+        cout << "\nPrinting group " << g + 1 << " of " << patternHeader.nGroups << endl;
+        cout << "hashId_array: ";
+        for (int i = 0; i < patternHeader.nLayers; i++) {
+            cout << " " << hashId_array[g*patternHeader.nLayers + i];
+        }
+        cout << endl;
+
+        layerSetGroupEnd = (g + 1 < patternHeader.nGroups) ? layerSetGroupBegin[g+1] : &layerSet.back() + 1;
+        nPattInGrp = layerSetGroupEnd - layerSetGroupBegin[g];
+        cout << "nPattInGrp: " << nPattInGrp << endl;
+
+        // Loop through patterns
+        for (int p = 0; p < nPattInGrp; p++) {
+            cout << "Reading pattern " << p + 1 << " of " << nPattInGrp << "(Group " << g + 1 << ")" << endl;
+            cout << "layerSet: " << bitset<16>(*(layerSetGroupBegin[g] + p)) << endl;
+            cout << "hitArray:";
+            for (int i = 0; i < patternHeader.nLayers; i++) {
+                cout << " " << bitset<8>(*(hitArrayGroupBegin[g] + p*patternHeader.nLayers + i));
+            }
+            cout << endl;
+        }
+    }
+
+}
+
+void readEvents(string eventFile) {
     ifstream input(eventFile.c_str(),ifstream::binary);
     ostream_iterator<int> int_out (cout, " ");
     EventHeader header;
