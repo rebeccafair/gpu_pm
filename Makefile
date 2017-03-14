@@ -4,7 +4,7 @@ INC_DIR=include
 LIB_DIR=lib
 
 CC=g++
-CFLAGS=-I./$(INC_DIR)
+CFLAGS=-std=c++0x -I./$(INC_DIR)
 
 DEPS=  #header files
 

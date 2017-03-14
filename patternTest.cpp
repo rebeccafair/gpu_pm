@@ -2,10 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
-#include <iterator>
 #include <string>
 #include <bitset>
-#include <unistd.h>
 
 using namespace std;
 
@@ -24,12 +22,21 @@ struct EventHeader {
     int nEvents;
 };
 
+PatternHeader patternHeader;
 vector<int> hashId_array;
 vector<unsigned short> layerSet;
 vector<unsigned short*> layerSetGroupBegin;
 vector<unsigned char> hitArray;
 vector<unsigned char*> hitArrayGroupBegin;
-PatternHeader patternHeader;
+
+EventHeader eventHeader;
+vector<int> eventId;
+vector<int> hashId;
+vector<unsigned int> nCollections;
+vector<unsigned int> nHits;
+vector<unsigned char> hitData;
+vector<unsigned int> subEventId;
+vector<unsigned int> barCode;
 
 int main(int argc, char* argv[]) {
 
@@ -49,13 +56,13 @@ int main(int argc, char* argv[]) {
     readPatterns(patternFile);
     printPatterns();
     readEvents(eventFile);
+    printEvents();
 
     return 0;
 }
 
 void readPatterns(string patternFile){
     ifstream input(patternFile.c_str(),ifstream::binary);
-    ostream_iterator<int> int_out (cout, " ");
     int nPattInGrp;
 
     if (input) {
@@ -115,6 +122,7 @@ void printPatterns() {
     int nPattInGrp;
     unsigned short* layerSetGroupEnd;
 
+
     // Print header
     cout << "\nnHitPatt: " << patternHeader.nHitPatt;
     cout << " nGroups: " << patternHeader.nGroups;
@@ -135,7 +143,7 @@ void printPatterns() {
 
         // Loop through patterns
         for (int p = 0; p < nPattInGrp; p++) {
-            cout << "Reading pattern " << p + 1 << " of " << nPattInGrp << "(Group " << g + 1 << ")" << endl;
+            cout << "Printing pattern " << p + 1 << " of " << nPattInGrp << "(Group " << g + 1 << ")" << endl;
             cout << "layerSet: " << bitset<16>(*(layerSetGroupBegin[g] + p)) << endl;
             cout << "hitArray:";
             for (int i = 0; i < patternHeader.nLayers; i++) {
@@ -149,110 +157,62 @@ void printPatterns() {
 
 void readEvents(string eventFile) {
     ifstream input(eventFile.c_str(),ifstream::binary);
-    ostream_iterator<int> int_out (cout, " ");
-    EventHeader header;
 
     if (input) {
-        cout << "\nReading event file " << eventFile << endl;
+        cout << "Reading event file " << eventFile << endl;
  
         // Read header 
-        input.read((char*)&header, sizeof(header));
-        cout << "nEvents: " << header.nEvents << endl;
+        input.read((char*)&eventHeader, sizeof(eventHeader));
 
-        // Declare vectors and temp variables
-        // Event record
-        vector<int> eventId;
-        int temp_eventId;
-        vector<unsigned int> nCollections;
-        unsigned int temp_nCollections;
-        // Hit collection record
-        vector<int> hashId;
-        int temp_hashId;
-        vector<unsigned int> nHits;
-        unsigned int temp_nHits;
-        // Hit record
-        vector<unsigned char> hitData;
-        unsigned char temp_hitData;
-        vector<unsigned int> subEventId;
-        unsigned int temp_subEventId;
-        vector<unsigned int> barCode;
-        unsigned int temp_barCode;
-
-        int eventCount;
-        int collectionCount;
-        int hitCount;
+        // Resize vectors according to header value
+        eventId.resize(eventHeader.nEvents);
+        nCollections.resize(eventHeader.nEvents);
 
         // Loop through events
-        eventCount = 0;
-        for (int i = 0; i < header.nEvents; i++) {
-            eventCount++;
-            cout << "\nReading event " << i + 1 << " of " << header.nEvents << endl;
+        for (int i = 0; i < eventHeader.nEvents; i++) {
 
-            // Read and print eventId
-            input.read((char*)&temp_eventId, sizeof(temp_eventId));
-            cout << "eventId: " << temp_eventId << endl;
-            eventId.insert(eventId.end(), temp_eventId);
-            // Read and print nCollections
-            input.read((char*)&temp_nCollections, sizeof(temp_nCollections));
-            cout << "nCollections: " << temp_nCollections << endl;
-            nCollections.insert(nCollections.end(), temp_nCollections);
+            // Read event fields
+            input.read((char*)&eventId[i], sizeof(int));
+            input.read((char*)&nCollections[i], sizeof(unsigned int));
+
+            // Reserve memory for collection fields
+            int* temp_hashId = new int[nCollections[i]];
+            unsigned int* temp_nHits = new unsigned int[nCollections[i]];
 
             // Loop through collections
-            collectionCount = 0;
-	    for (int j = 0; j < temp_nCollections; j++) {
-                collectionCount++;
-                cout << "\nReading collection " << j + 1 << " of " << temp_nCollections << " (Event " << i + 1 << ")" << endl;
- 
-                // Read and print hashId
-                input.read((char*)&temp_hashId, sizeof(temp_hashId));
-                cout << "hashId: " << temp_hashId << endl;
-                hashId.insert(hashId.end(), temp_hashId);
-                // Read and print nHits
-                input.read((char*)&temp_nHits, sizeof(temp_nHits));
-                cout << "nHits: " << temp_nHits << endl;
-                nHits.insert(nHits.end(), temp_nHits);
+	    for (int j = 0; j < nCollections[i]; j++) {
+
+                // Read collection fields
+                input.read((char*)&temp_hashId[j], sizeof(int));
+                input.read((char*)&temp_nHits[j], sizeof(unsigned int));
+
+                // Reserve memory for hit fields
+                unsigned char* temp_hitData = new unsigned char[temp_nHits[j]];
+                unsigned int* temp_subEventId = new unsigned int[temp_nHits[j]];
+                unsigned int* temp_barCode = new unsigned int[temp_nHits[j]];
 
                 // Loop through hits
-                hitCount = 0;
-                for (int k = 0; k < temp_nHits; k++) {
-                    hitCount++;
+                for (int k = 0; k < temp_nHits[j]; k++) {
 
-                    // Read and print hitData
-                    input.read((char*)&temp_hitData, sizeof(temp_hitData));
-                    cout << "hitData: " << bitset<8>(temp_hitData) << endl;
-                    hitData.insert(hitData.end(), temp_hitData);
-                    // Read and print subEventId
-                    input.read((char*)&temp_subEventId, sizeof(temp_subEventId));
-                    cout << "subEventId: " << temp_subEventId << endl;
-                    subEventId.insert(subEventId.end(), temp_subEventId);
-                    // Read and print barCode
-                    input.read((char*)&temp_barCode, sizeof(temp_barCode));
-                    cout << "barCode: " << bitset<16>(temp_barCode) << endl;
-                    barCode.insert(barCode.end(), temp_barCode);
+                    // Read hit fields
+                    input.read((char*)&temp_hitData[k], sizeof(unsigned char));
+                    input.read((char*)&temp_subEventId[k], sizeof(unsigned int));
+                    input.read((char*)&temp_barCode[k], sizeof(unsigned int));
                 }
-                if (hitCount != temp_nHits) {
-                    cerr << "Error: Number of hits read is incorrect for event " << i + 1 << " collection " << j + 1 << endl;
-                    input.close();
-                    exit(EXIT_FAILURE);
-                }
+                // Insert hit fields to global arrays
+                hitData.insert(hitData.end(), temp_hitData, temp_hitData + temp_nHits[j]);
+                subEventId.insert(subEventId.end(), temp_subEventId, temp_subEventId + temp_nHits[j]);
+                barCode.insert(barCode.end(), temp_barCode, temp_barCode + temp_nHits[j]);
             }
-            if (collectionCount != temp_nCollections) {
-                cerr << "Error: Number of collections read is incorrect for event " << i + 1 << endl;
-                input.close();
-                exit(EXIT_FAILURE);
-            }
+            // Insert collection fields to global arrays
+            hashId.insert(hashId.end(), temp_hashId, temp_hashId + nCollections[i]);
+            nHits.insert(nHits.end(), temp_nHits, temp_nHits + nCollections[i]);
         }
-        if (eventCount != header.nEvents) {
-            cerr << "Error: Number of events read is incorrect" << endl;
-            input.close();
-            exit(EXIT_FAILURE);
-        }
-
         if (input.peek() == EOF) {
-            cout << "\nFinished reading " << eventFile << endl;
+            cout << "Finished reading " << eventFile << endl;
             input.close();
         } else {
-            cerr << "\nError: Finished reading events but did not reach end of file" << endl;
+            cerr << "Error: Finished reading events but did not reach end of file" << endl;
             input.close();
             exit(EXIT_FAILURE);
         }
@@ -262,3 +222,48 @@ void readEvents(string eventFile) {
         cerr << "Error reading event file " << eventFile << endl;
     }
 }
+
+void printEvents() {
+
+    int* pHashId = &hashId[0];
+    unsigned int* pNHits = &nHits[0];
+    unsigned char* pHitData = &hitData[0];
+    unsigned int* pSubEventId = &subEventId[0];
+    unsigned int* pBarCode = &barCode[0];
+
+    cout << "\nPrinting events..." << endl;
+
+    // Print header
+    cout << "\nnEvents: " << eventHeader.nEvents;
+
+    // Loop through events
+    for (int i = 0; i < eventHeader.nEvents; i++) {
+        cout << "\nPrinting event " << i + 1 << " of " << eventHeader.nEvents << endl;
+        cout << "EventId: " << eventId[i] << endl;
+        cout << "nCollections: " << nCollections[i] << endl;
+
+        // Loop through collections
+        for (int j = 0; j < nCollections[i]; j++) {
+            cout << "\nPrinting collection " << j + 1 << " of " << nCollections[i] << " (Event " << i + 1 << ")" << endl;
+
+            cout << "hashId: " << *(pHashId) << endl;
+            cout << "nHits: " << *(pNHits) << endl;
+
+            // Loop through hits
+            for (int k = 0; k < *(pNHits); k++) {
+                cout << "hitData: " << bitset<8>(*(pHitData)) << endl;
+                cout << "subEventId: " << *(pSubEventId) << endl;
+                cout << "barCode: " << *(pBarCode) << endl;
+
+                pHitData++;
+                pSubEventId++;
+                pBarCode++;
+            }
+            pHashId++;
+            pNHits++;
+
+        }
+    }
+
+}
+
