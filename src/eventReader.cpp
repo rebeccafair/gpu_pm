@@ -4,7 +4,9 @@
 #include <string>
 #include <bitset>
 #include <cstdlib>
+#include <chrono>
 
+#include "common.h"
 #include "eventReader.h"
 
 using namespace std;
@@ -49,6 +51,7 @@ void readEvents(string eventFile) {
     ifstream input(eventFile.c_str(),ifstream::binary);
 
     if (input) {
+        auto t_begin = Clock::now();
         cout << "Reading event file " << eventFile << endl;
  
         // Read header 
@@ -96,10 +99,12 @@ void readEvents(string eventFile) {
             }
             // Insert collection fields to global arrays
             hashId.insert(hashId.end(), temp_hashId, temp_hashId + nCollections[i]);
-            nHits.insert(nHits.end(), temp_nHits, temp_nHits + nCollections[i]);
+            nHits.insert(nHits.end(), temp_nHits, temp_nHits + nCollections[i]); 
         }
+        auto t_end = Clock::now();
         if (input.peek() == EOF) {
-            cout << "Finished reading " << eventFile << endl;
+            cout << "Finished reading " << eventFile << " in "
+                 <<  chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
             input.close();
         } else {
             cerr << "Error: Finished reading events but did not reach end of file" << endl;

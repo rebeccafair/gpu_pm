@@ -1,39 +1,17 @@
 #include <iostream>
 #include <vector>
-#include <string>
 
-using namespace std;
-
+#include "common.h"
 #include "eventReader.h"
 #include "patternReader.h"
 
-void compare();
+#include "matchPatterns.h"
 
-int main(int argc, char* argv[]) {
+using namespace std;
 
-    string patternFile = "inputs/pattern_groups.bin";
-    string eventFile = "inputs/single_track_hit_events.bin";
-    char opt;
+void match();
 
-    while((opt = getopt(argc,argv,"e:p:")) != EOF) {
-        switch(opt)
-        {
-            case 'e': eventFile = optarg; break;
-            case 'p': patternFile = optarg; break;
-            default: cerr << "Invalid argument" << endl; exit(EXIT_FAILURE);
-        }
-    }
-    readPatterns(patternFile);
-    printPatterns();
-    readEvents(eventFile);
-    printEvents();
-
-    compare();
-
-    return 0;
-}
-
-void compare() {
+void match() {
 
     int* pHashId;
     int* pHashIdEventBegin;
@@ -43,6 +21,8 @@ void compare() {
     int nMatchingDetectorElems;
     int nRequiredMatches = 7;
     vector<int> matchingGroups;
+
+    auto t_begin = Clock::now();
 
     // Loop through events
     for (int event = 0; event < eventHeader.nEvents; event++) {
@@ -97,5 +77,6 @@ void compare() {
         }
         cout << "\n" << endl;
     }
-
+    auto t_end = Clock::now();
+    cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
 }

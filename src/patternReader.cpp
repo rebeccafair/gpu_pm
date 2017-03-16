@@ -4,7 +4,9 @@
 #include <string>
 #include <bitset>
 #include <cstdlib>
+#include <chrono>
 
+#include "common.h"
 #include "patternReader.h"
 
 using namespace std;
@@ -44,8 +46,9 @@ void readPatterns(string patternFile){
     int nPattInGrp;
 
     if (input) {
+        auto t_begin = Clock::now();
         cout << "\nReading pattern file " << patternFile << endl;
- 
+
         // Read header 
         input.read((char*)&patternHeader, sizeof(patternHeader));
 
@@ -80,8 +83,10 @@ void readPatterns(string patternFile){
                 currentHitArray += patternHeader.nLayers;
             }
         }
+        auto t_end = Clock::now();
         if (input.peek() == EOF) {
-            cout << "Finished reading " << patternFile << endl;
+            cout << "Finished reading " << patternFile << " in " 
+                 << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
             input.close();
         } else {
             cerr << "Error: Finished reading groups but did not reach end of file" << endl;

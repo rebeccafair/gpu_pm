@@ -9,7 +9,8 @@ CFLAGS=-std=c++0x -I./$(INC_DIR)
 
 SOURCES:=eventReader.cpp
 SOURCES+=patternReader.cpp
-SOURCES+=patternTest.cpp
+SOURCES+=matchPatterns.cpp
+SOURCES+=main.cpp
 
 OBJS = $(addprefix $(OBJ_DIR)/, $(SOURCES:.cpp=.o))
 
