@@ -5,7 +5,7 @@ INC_DIR=include
 LIB_DIR=lib
 
 CC=g++
-CFLAGS=-std=c++0x -I./$(INC_DIR)
+CFLAGS=-std=c++11 -O3 -I./$(INC_DIR)
 
 SOURCES:=eventReader.cpp
 SOURCES+=patternReader.cpp

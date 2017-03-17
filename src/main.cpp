@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <getopt.h>
 
 #include "eventReader.h"
 #include "patternReader.h"
