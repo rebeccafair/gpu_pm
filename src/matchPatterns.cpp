@@ -15,17 +15,13 @@ void match();
 
 void match() {
 
-    int* pHashId;
     int* pHashIdEventBegin;
     unsigned int* pNHitsEventBegin;
     unsigned char* hitDataCollBegin;
 
-    int nMatchingDetectorElems;
-    int nMatchingPatterns;
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     vector<int> nEventMatches(eventHeader.nEvents);
-    vector<int> matchingGroups;
 
     auto t_begin = Clock::now();
 
@@ -34,12 +30,12 @@ void match() {
         cout << "Comparing event " << event + 1 << endl;
         pHashIdEventBegin = (event == 0) ? &hashId[0] : pHashIdEventBegin + nCollections[event-1];
         pNHitsEventBegin = (event == 0) ? &nHits[0] : pNHitsEventBegin + nCollections[event-1];
-        matchingGroups.clear();
+        vector<int> matchingGroups;
 
         // Determine which groups contain the correct detector
         // elements to be a potential match
         for (int grp = 0; grp < patternHeader.nGroups; grp++) {
-            nMatchingDetectorElems = 0;
+            int nMatchingDetectorElems = 0;
             // Loop through hashId layers in group
             for (int lyr = 0; lyr < patternHeader.nLayers; lyr++) {
                 // Check if layer is wildcard
@@ -122,16 +118,20 @@ void match() {
                 }
             }
             for (int patt = 0; patt < nPattInGrp[grp]; patt++) {
-                if (nPattMatches[patt] > nRequiredMatches) {
+                if (nPattMatches[patt] >= nRequiredMatches) {
+                    cout << "from group " << grp + 1 << " pattern " << patt + 1 << " matches event " << event + 1 << endl;
                     nEventMatches[event]++;  
                 }
             }
        }
     }
+    auto t_end = Clock::now();
 
+    int totalMatches = 0;
     for (int event = 0; event < eventHeader.nEvents; event++) {
+        totalMatches += nEventMatches[event];
         cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
     }
-    auto t_end = Clock::now();
+    cout << "Total matches: " << totalMatches << endl;
     cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
 }
