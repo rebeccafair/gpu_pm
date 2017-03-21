@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <bitset>
+#include <algorithm>
 
 #include "common.h"
 #include "eventReader.h"
@@ -15,20 +17,23 @@ void match() {
 
     int* pHashId;
     int* pHashIdEventBegin;
-    unsigned int* pNHits = &nHits[0];
-    unsigned char* pHitData = &hitData[0];
+    unsigned int* pNHitsEventBegin;
+    unsigned char* hitDataCollBegin;
 
     int nMatchingDetectorElems;
+    int nMatchingPatterns;
     int nRequiredMatches = 7;
+    int nMaxRows = 22;
+    vector<int> nEventMatches(eventHeader.nEvents);
     vector<int> matchingGroups;
 
     auto t_begin = Clock::now();
 
     // Loop through events
     for (int event = 0; event < eventHeader.nEvents; event++) {
-        //cout << "Comparing event " << event + 1 << endl;
-
+        cout << "Comparing event " << event + 1 << endl;
         pHashIdEventBegin = (event == 0) ? &hashId[0] : pHashIdEventBegin + nCollections[event-1];
+        pNHitsEventBegin = (event == 0) ? &nHits[0] : pNHitsEventBegin + nCollections[event-1];
         matchingGroups.clear();
 
         // Determine which groups contain the correct detector
@@ -37,45 +42,95 @@ void match() {
             nMatchingDetectorElems = 0;
             // Loop through hashId layers in group
             for (int lyr = 0; lyr < patternHeader.nLayers; lyr++) {
-                //cout << "Checking layer " << lyr << " from group " << grp + 1 << " hashId: " << hashId_array[grp*patternHeader.nLayers + lyr] << endl;
-
                 // Check if layer is wildcard
                 if ( hashId_array[grp*patternHeader.nLayers + lyr] == -1) {
-                    //cout << "Wildcard on layer " << lyr << " from group " << grp + 1 << endl;
                     nMatchingDetectorElems++;
                 // If not wildcard, check collection hash IDs for a match
                 } else {
-                    for (int j = 0; j < nCollections[event]; j++) {
-                        //cout << "Checking hashId: " << *(pHashIdEventBegin + j) << " from collection " << j + 1 << endl;
-                        if ( hashId_array[grp*patternHeader.nLayers + lyr] == *(pHashIdEventBegin + j) ) {
+                    for (int coll = 0; coll < nCollections[event]; coll++) {
+                        if ( hashId_array[grp*patternHeader.nLayers + lyr] == *(pHashIdEventBegin + coll) ) {
                             nMatchingDetectorElems++;
-                            //cout << "hashId match! Breaking out of collection" << endl;
+                            // Break out of collection loop if match is found
                             break;
                         }
                     }
                 }
 
                 // Break out of group if a match is impossible
-                if ( nMatchingDetectorElems + patternHeader.nLayers - lyr <= nRequiredMatches ) {
-                    //cout << "Impossible to match, breaking out of group" << endl;
+                if ( nMatchingDetectorElems <= lyr ) {
                     break;
-                // Break out if enough matching ids have already been found
-                } else if ( nMatchingDetectorElems >= nRequiredMatches ) {
-                    //cout << "Match found! Breaking out of loop" << endl;
                 }
-
             }
-            //cout << "For group " << grp + 1 << ", " << nMatchingDetectorElems << " matching detector elements" << endl;
             if ( nMatchingDetectorElems >= nRequiredMatches ) {
-                 //cout << "Found matching group! Group " << grp + 1 << endl;
                  matchingGroups.push_back(grp);
             }
         }
-        cout << "Matching groups for event " << event + 1 << ": ";
+
+        // For each matching group, loop through layers 
         for (int i = 0; i < matchingGroups.size(); i++) {
-            cout << matchingGroups[i] << " ";
-        }
-        cout << "\n" << endl;
+            vector<int> nPattMatches(nPattInGrp[i]);
+            int grp = matchingGroups[i];
+            for (int lyr = 0; lyr < patternHeader.nLayers; lyr++) {
+                hitDataCollBegin = hitDataEventBegin[event];
+
+                // Check for wildcard layer
+                if ( hashId_array[grp*patternHeader.nLayers + lyr] == -1 ) {
+                    transform(begin(nPattMatches), end(nPattMatches), begin(nPattMatches), [](int x){return x + 1;});
+
+                // Otherwise find collection with matching hashId
+                } else {
+                    for (int coll = 0; coll < nCollections[event]; coll++) {
+                        if (hashId_array[grp*patternHeader.nLayers + lyr] == *(pHashIdEventBegin + coll)) {
+                            // Loop through hits in matching collections
+                            for (int hit = 0; hit < *(pNHitsEventBegin + coll); hit++) {
+                                // Decode hit data
+                                unsigned char eventHitPos = (*(hitDataCollBegin + hit) & 127);
+                                unsigned char eventIsPixel = ((*(hitDataCollBegin + hit) >> 7) & 1);
+                                // Loop through patterns
+                                for (int patt = 0; patt < nPattInGrp[grp]; patt++) {
+                                    // Decode pattern data
+                                    unsigned char pattDontCareBits = *(hitArrayGroupBegin[grp] + patternHeader.nLayers*patt + lyr) & 3;
+                                    unsigned char pattHitPos = ((*(hitArrayGroupBegin[grp] + patternHeader.nLayers*patt + lyr) >> 2) & 63);
+
+                                    // Check if pixel or strip 
+                                    if (eventIsPixel) {
+                                        // Pixel - decode pixel column number
+                                        unsigned char eventPixCol = (eventHitPos & 3);
+                                        unsigned char pattPixCol = pattHitPos/nMaxRows;
+                                        if ( eventPixCol == pattPixCol ) {
+                                            // If pixel columns match, decode pixel row and check whether they
+                                            // are within dontCareBits of each other
+                                            unsigned char eventPixRow = ((eventHitPos >> 2) & 31);
+                                            unsigned char pattPixRow = pattHitPos%nMaxRows;
+                                            if ( abs(eventPixRow - pattPixRow) <= pattDontCareBits ) {
+                                                nPattMatches[patt]++;
+                                            }
+                                        }
+                                    } else {
+                                        // Strip - decode superstrip value
+                                        unsigned char eventSuperstrip = ((eventHitPos >> 2) & 31);
+                                        // Check if the hit positions of the pattern and event are within DontCareBits of each other
+                                        if ( abs(eventSuperstrip - pattHitPos) <= pattDontCareBits ) {
+                                            nPattMatches[patt]++;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        hitDataCollBegin += *(pNHitsEventBegin + coll);
+                    }
+                }
+            }
+            for (int patt = 0; patt < nPattInGrp[grp]; patt++) {
+                if (nPattMatches[patt] > nRequiredMatches) {
+                    nEventMatches[event]++;  
+                }
+            }
+       }
+    }
+
+    for (int event = 0; event < eventHeader.nEvents; event++) {
+        cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
     }
     auto t_end = Clock::now();
     cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;

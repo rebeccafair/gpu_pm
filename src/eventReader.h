@@ -22,6 +22,7 @@ extern vector<int> hashId;
 extern vector<unsigned int> nCollections;
 extern vector<unsigned int> nHits;
 extern vector<unsigned char> hitData;
+extern vector<unsigned char*> hitDataEventBegin;
 extern vector<unsigned int> subEventId;
 extern vector<unsigned int> barCode;
 

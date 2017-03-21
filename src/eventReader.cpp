@@ -20,6 +20,7 @@ vector<int> hashId;
 vector<unsigned int> nCollections;
 vector<unsigned int> nHits;
 vector<unsigned char> hitData;
+vector<unsigned char*> hitDataEventBegin;
 vector<unsigned int> subEventId;
 vector<unsigned int> barCode;
 
@@ -60,6 +61,7 @@ void readEvents(string eventFile) {
         // Resize vectors according to header value
         eventId.resize(eventHeader.nEvents);
         nCollections.resize(eventHeader.nEvents);
+        hitDataEventBegin.resize(eventHeader.nEvents);
 
         // Loop through events
         for (int i = 0; i < eventHeader.nEvents; i++) {
@@ -101,6 +103,21 @@ void readEvents(string eventFile) {
             hashId.insert(hashId.end(), temp_hashId, temp_hashId + nCollections[i]);
             nHits.insert(nHits.end(), temp_nHits, temp_nHits + nCollections[i]); 
         }
+
+        // Loop through groups, collections and events again to point pointers to the
+        // beginning of each event in hitData
+        unsigned int* pNHits = &nHits[0];
+        unsigned char* pHitData = &hitData[0];
+        for (int i = 0; i < eventHeader.nEvents; i++) {
+            hitDataEventBegin[i] = pHitData;
+            for (int j = 0; j < nCollections[i]; j++) {
+                for (int k = 0; k < *pNHits; k++) {
+                    pHitData++;
+                }
+                pNHits++;
+            }
+        }
+
         auto t_end = Clock::now();
         if (input.peek() == EOF) {
             cout << "Finished reading " << eventFile << " in "

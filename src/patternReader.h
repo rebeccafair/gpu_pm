@@ -19,6 +19,7 @@ struct PatternHeader {
 };
 
 extern PatternHeader patternHeader;
+extern vector<int> nPattInGrp;
 extern vector<int> hashId_array;
 extern vector<unsigned short> layerSet;
 extern vector<unsigned short*> layerSetGroupBegin;
