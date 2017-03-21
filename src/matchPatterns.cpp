@@ -64,6 +64,7 @@ void match() {
 
         // For each matching group, loop through layers 
         for (int i = 0; i < matchingGroups.size(); i++) {
+            vector<int> matchingPatterns;
             vector<int> nPattMatches(nPattInGrp[i]);
             int grp = matchingGroups[i];
             for (int lyr = 0; lyr < patternHeader.nLayers; lyr++) {
@@ -83,7 +84,9 @@ void match() {
                                 unsigned char eventHitPos = (*(hitDataCollBegin + hit) & 127);
                                 unsigned char eventIsPixel = ((*(hitDataCollBegin + hit) >> 7) & 1);
                                 // Loop through patterns
-                                for (int patt = 0; patt < nPattInGrp[grp]; patt++) {
+                                int nMatchingPatterns = ( lyr == 0 ) ? nPattInGrp[grp] : matchingPatterns.size();
+                                for (int j = 0; j < nMatchingPatterns; j++) {
+                                    int patt = ( lyr == 0 ) ? j : matchingPatterns[j];
                                     // Decode pattern data
                                     unsigned char pattDontCareBits = *(hitArrayGroupBegin[grp] + patternHeader.nLayers*patt + lyr) & 3;
                                     unsigned char pattHitPos = ((*(hitArrayGroupBegin[grp] + patternHeader.nLayers*patt + lyr) >> 2) & 63);
@@ -105,21 +108,32 @@ void match() {
                                     } else {
                                         // Strip - decode superstrip value
                                         unsigned char eventSuperstrip = ((eventHitPos >> 2) & 31);
-                                        // Check if the hit positions of the pattern and event are within DontCareBits of each other
+                                        // Check if the hit positions of the pattern and event are within dontCareBits of each other
                                         if ( abs(eventSuperstrip - pattHitPos) <= pattDontCareBits ) {
                                             nPattMatches[patt]++;
                                         }
                                     }
+
                                 }
                             }
                         }
                         hitDataCollBegin += *(pNHitsEventBegin + coll);
                     }
                 }
+                // Create vector containing only patterns that have a chance of matching
+                vector<int> tmp_matchingPatterns;
+                int nMatchingPatterns = ( lyr == 0 ) ? nPattInGrp[grp] : matchingPatterns.size();
+                for (int j = 0; j < nMatchingPatterns; j++) {
+                    int patt = ( lyr == 0 ) ? j : matchingPatterns[j];
+                    if (nPattMatches[patt] + patternHeader.nLayers - lyr > nRequiredMatches) {
+                        tmp_matchingPatterns.push_back(patt);
+                    }
+                }
+                matchingPatterns = tmp_matchingPatterns;
             }
+            // Get total number of matches for this event
             for (int patt = 0; patt < nPattInGrp[grp]; patt++) {
                 if (nPattMatches[patt] >= nRequiredMatches) {
-                    cout << "from group " << grp + 1 << " pattern " << patt + 1 << " matches event " << event + 1 << endl;
                     nEventMatches[event]++;  
                 }
             }
