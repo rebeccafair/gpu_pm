@@ -4,6 +4,7 @@
 // matchPatterns.h
 // Searches for matches between events and patterns
 
-void match();
+void matchByPatterns();
+void matchByEvents();
 
 #endif

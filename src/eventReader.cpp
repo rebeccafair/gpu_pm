@@ -16,9 +16,11 @@ void printEvents();
 
 EventHeader eventHeader;
 vector<int> eventId;
-vector<int> hashId;
 vector<unsigned int> nCollections;
+vector<int> hashId;
+vector<int*> hashIdEventBegin;
 vector<unsigned int> nHits;
+vector<unsigned int*> nHitsEventBegin;
 vector<unsigned char> hitData;
 vector<unsigned char*> hitDataEventBegin;
 vector<unsigned int> subEventId;
@@ -61,6 +63,8 @@ void readEvents(string eventFile) {
         // Resize vectors according to header value
         eventId.resize(eventHeader.nEvents);
         nCollections.resize(eventHeader.nEvents);
+        hashIdEventBegin.resize(eventHeader.nEvents);
+        nHitsEventBegin.resize(eventHeader.nEvents);
         hitDataEventBegin.resize(eventHeader.nEvents);
 
         // Loop through events
@@ -105,16 +109,20 @@ void readEvents(string eventFile) {
         }
 
         // Loop through groups, collections and events again to point pointers to the
-        // beginning of each event in hitData
+        // beginning of each event in hitData, nHits and hashId
+        int* pHashId = &hashId[0];
         unsigned int* pNHits = &nHits[0];
         unsigned char* pHitData = &hitData[0];
         for (int i = 0; i < eventHeader.nEvents; i++) {
+            hashIdEventBegin[i] = pHashId;
+            nHitsEventBegin[i] = pNHits;
             hitDataEventBegin[i] = pHitData;
             for (int j = 0; j < nCollections[i]; j++) {
                 for (int k = 0; k < *pNHits; k++) {
                     pHitData++;
                 }
                 pNHits++;
+                pHashId++;
             }
         }
 
@@ -137,8 +145,6 @@ void readEvents(string eventFile) {
 
 void printEvents() {
 
-    int* pHashId = &hashId[0];
-    unsigned int* pNHits = &nHits[0];
     unsigned char* pHitData = &hitData[0];
     unsigned int* pSubEventId = &subEventId[0];
     unsigned int* pBarCode = &barCode[0];
@@ -158,11 +164,11 @@ void printEvents() {
         for (int j = 0; j < nCollections[i]; j++) {
             cout << "\nPrinting collection " << j + 1 << " of " << nCollections[i] << " (Event " << i + 1 << ")" << endl;
 
-            cout << "hashId: " << *(pHashId) << endl;
-            cout << "nHits: " << *(pNHits) << endl;
+            cout << "hashId: " << *(hashIdEventBegin[i] + j) << endl;
+            cout << "nHits: " << *(nHitsEventBegin[i] + j) << endl;
 
             // Loop through hits
-            for (int k = 0; k < *(pNHits); k++) {
+            for (int k = 0; k < *(nHitsEventBegin[i] + j); k++) {
                 cout << "hitData: " << bitset<8>(*(pHitData)) << endl;
                 cout << "subEventId: " << *(pSubEventId) << endl;
                 cout << "barCode: " << *(pBarCode) << endl;
@@ -171,9 +177,6 @@ void printEvents() {
                 pSubEventId++;
                 pBarCode++;
             }
-            pHashId++;
-            pNHits++;
-
         }
     }
 

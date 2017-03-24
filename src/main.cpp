@@ -29,8 +29,7 @@ int main(int argc, char* argv[]) {
     readEvents(eventFile);
     //printEvents();
 
-    match();
+    matchByEvents();
 
     return 0;
 }
-

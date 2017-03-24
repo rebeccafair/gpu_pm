@@ -18,9 +18,11 @@ struct EventHeader {
 
 extern EventHeader eventHeader;
 extern vector<int> eventId;
-extern vector<int> hashId;
 extern vector<unsigned int> nCollections;
+extern vector<int> hashId;
+extern vector<int*> hashIdEventBegin;
 extern vector<unsigned int> nHits;
+extern vector<unsigned int*> nHitsEventBegin;
 extern vector<unsigned char> hitData;
 extern vector<unsigned char*> hitDataEventBegin;
 extern vector<unsigned int> subEventId;
