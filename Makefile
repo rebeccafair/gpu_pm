@@ -1,28 +1,29 @@
-EXEC=patternTest
-SRC_DIR=src
-OBJ_DIR=obj
-INC_DIR=include
-LIB_DIR=lib
+################################################################################
+#
+## Build script for project
+#
+#################################################################################
 
-CC=g++
-CFLAGS=-std=c++11 -O3 -I./$(INC_DIR)
+# Add source files here
+EXECUTABLE      := patternTest
 
-SOURCES:=eventReader.cpp
-SOURCES+=patternReader.cpp
-SOURCES+=matchPatterns.cpp
-SOURCES+=main.cpp
+# # Cuda source files (compiled with nvcc)
+#CUFILES_sm_35   := KernelDriver.cu
+CUFILES_sm_35   := main.cu
 
-OBJS = $(addprefix $(OBJ_DIR)/, $(SOURCES:.cpp=.o))
+# # C/C++ source files (compiled with gcc / c++)
 
-vpath %.cpp $(SRC_DIR)
-vpath %.h $(SRC_DIR)
+SRCDIR=./src/
+CCFILES := eventReader.cpp patternReader.cpp matchPatterns.cpp
+CXXFLAGS += -std=c++11
 
-$(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+# # Compiler-specific flags
+#NVCCFLAGS      := --ptxas-options="-v" -std=c++11
 
-$(OBJ_DIR)/%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+#NVCCFLAGS :=  --keep
 
-clean:
-	rm -f $(OBJ_DIR)/*.o
-	rm -f $(EXEC)
+# ################################################################################
+# # Rules and targets
+
+include common.mk
+

@@ -11,20 +11,8 @@
 
 using namespace std;
 
-void readEvents(string eventFile);
-void printEvents();
-
-EventHeader eventHeader;
-vector<int> eventId;
-vector<unsigned int> nCollections;
-vector<int> hashId;
-vector<int*> hashIdEventBegin;
-vector<unsigned int> nHits;
-vector<unsigned int*> nHitsEventBegin;
-vector<unsigned char> hitData;
-vector<unsigned char*> hitDataEventBegin;
-vector<unsigned int> subEventId;
-vector<unsigned int> barCode;
+void readEvents(string eventFile, EventContainer& e);
+void printEvents(const EventContainer& e);
 
 // Read events from a binary event file and put them into global variables
 // 
@@ -50,7 +38,7 @@ vector<unsigned int> barCode;
 //         hitData - a bitmask detailing hit position
 //         subEventId - unique ID describing the sub event
 //         barCode - unique ID describing the sub event particle
-void readEvents(string eventFile) {
+void readEvents(string eventFile, EventContainer& e) {
     ifstream input(eventFile.c_str(),ifstream::binary);
 
     if (input) {
@@ -58,28 +46,28 @@ void readEvents(string eventFile) {
         cout << "Reading event file " << eventFile << endl;
  
         // Read header 
-        input.read((char*)&eventHeader, sizeof(eventHeader));
+        input.read((char*)&e.header, sizeof(e.header));
 
         // Resize vectors according to header value
-        eventId.resize(eventHeader.nEvents);
-        nCollections.resize(eventHeader.nEvents);
-        hashIdEventBegin.resize(eventHeader.nEvents);
-        nHitsEventBegin.resize(eventHeader.nEvents);
-        hitDataEventBegin.resize(eventHeader.nEvents);
+        e.eventId.resize(e.header.nEvents);
+        e.nCollections.resize(e.header.nEvents);
+        e.hashIdEventBegin.resize(e.header.nEvents);
+        e.nHitsEventBegin.resize(e.header.nEvents);
+        e.hitDataEventBegin.resize(e.header.nEvents);
 
         // Loop through events
-        for (int i = 0; i < eventHeader.nEvents; i++) {
+        for (int i = 0; i < e.header.nEvents; i++) {
 
             // Read event fields
-            input.read((char*)&eventId[i], sizeof(int));
-            input.read((char*)&nCollections[i], sizeof(unsigned int));
+            input.read((char*)&e.eventId[i], sizeof(int));
+            input.read((char*)&e.nCollections[i], sizeof(unsigned int));
 
             // Reserve memory for collection fields
-            int* temp_hashId = new int[nCollections[i]];
-            unsigned int* temp_nHits = new unsigned int[nCollections[i]];
+            int* temp_hashId = new int[e.nCollections[i]];
+            unsigned int* temp_nHits = new unsigned int[e.nCollections[i]];
 
             // Loop through collections
-	    for (int j = 0; j < nCollections[i]; j++) {
+	    for (int j = 0; j < e.nCollections[i]; j++) {
 
                 // Read collection fields
                 input.read((char*)&temp_hashId[j], sizeof(int));
@@ -99,25 +87,25 @@ void readEvents(string eventFile) {
                     input.read((char*)&temp_barCode[k], sizeof(unsigned int));
                 }
                 // Insert hit fields to global arrays
-                hitData.insert(hitData.end(), temp_hitData, temp_hitData + temp_nHits[j]);
-                subEventId.insert(subEventId.end(), temp_subEventId, temp_subEventId + temp_nHits[j]);
-                barCode.insert(barCode.end(), temp_barCode, temp_barCode + temp_nHits[j]);
+                e.hitData.insert(e.hitData.end(), temp_hitData, temp_hitData + temp_nHits[j]);
+                e.subEventId.insert(e.subEventId.end(), temp_subEventId, temp_subEventId + temp_nHits[j]);
+                e.barCode.insert(e.barCode.end(), temp_barCode, temp_barCode + temp_nHits[j]);
             }
             // Insert collection fields to global arrays
-            hashId.insert(hashId.end(), temp_hashId, temp_hashId + nCollections[i]);
-            nHits.insert(nHits.end(), temp_nHits, temp_nHits + nCollections[i]); 
+            e.hashId.insert(e.hashId.end(), temp_hashId, temp_hashId + e.nCollections[i]);
+            e.nHits.insert(e.nHits.end(), temp_nHits, temp_nHits + e.nCollections[i]);
         }
 
         // Loop through groups, collections and events again to point pointers to the
         // beginning of each event in hitData, nHits and hashId
-        int* pHashId = &hashId[0];
-        unsigned int* pNHits = &nHits[0];
-        unsigned char* pHitData = &hitData[0];
-        for (int i = 0; i < eventHeader.nEvents; i++) {
-            hashIdEventBegin[i] = pHashId;
-            nHitsEventBegin[i] = pNHits;
-            hitDataEventBegin[i] = pHitData;
-            for (int j = 0; j < nCollections[i]; j++) {
+        int* pHashId = &e.hashId[0];
+        unsigned int* pNHits = &e.nHits[0];
+        unsigned char* pHitData = &e.hitData[0];
+        for (int i = 0; i < e.header.nEvents; i++) {
+            e.hashIdEventBegin[i] = pHashId;
+            e.nHitsEventBegin[i] = pNHits;
+            e.hitDataEventBegin[i] = pHitData;
+            for (int j = 0; j < e.nCollections[i]; j++) {
                 for (int k = 0; k < *pNHits; k++) {
                     pHitData++;
                 }
@@ -143,32 +131,32 @@ void readEvents(string eventFile) {
     }
 }
 
-void printEvents() {
+void printEvents(const EventContainer &e) {
 
-    unsigned char* pHitData = &hitData[0];
-    unsigned int* pSubEventId = &subEventId[0];
-    unsigned int* pBarCode = &barCode[0];
+    const unsigned char* pHitData = &e.hitData[0];
+    const unsigned int* pSubEventId = &e.subEventId[0];
+    const unsigned int* pBarCode = &e.barCode[0];
 
     cout << "\nPrinting events..." << endl;
 
     // Print header
-    cout << "\nnEvents: " << eventHeader.nEvents;
+    cout << "\nnEvents: " << e.header.nEvents;
 
     // Loop through events
-    for (int i = 0; i < eventHeader.nEvents; i++) {
-        cout << "\nPrinting event " << i + 1 << " of " << eventHeader.nEvents << endl;
-        cout << "EventId: " << eventId[i] << endl;
-        cout << "nCollections: " << nCollections[i] << endl;
+    for (int i = 0; i < e.header.nEvents; i++) {
+        cout << "\nPrinting event " << i + 1 << " of " << e.header.nEvents << endl;
+        cout << "EventId: " << e.eventId[i] << endl;
+        cout << "nCollections: " << e.nCollections[i] << endl;
 
         // Loop through collections
-        for (int j = 0; j < nCollections[i]; j++) {
-            cout << "\nPrinting collection " << j + 1 << " of " << nCollections[i] << " (Event " << i + 1 << ")" << endl;
+        for (int j = 0; j < e.nCollections[i]; j++) {
+            cout << "\nPrinting collection " << j + 1 << " of " << e.nCollections[i] << " (Event " << i + 1 << ")" << endl;
 
-            cout << "hashId: " << *(hashIdEventBegin[i] + j) << endl;
-            cout << "nHits: " << *(nHitsEventBegin[i] + j) << endl;
+            cout << "hashId: " << *(e.hashIdEventBegin[i] + j) << endl;
+            cout << "nHits: " << *(e.nHitsEventBegin[i] + j) << endl;
 
             // Loop through hits
-            for (int k = 0; k < *(nHitsEventBegin[i] + j); k++) {
+            for (int k = 0; k < *(e.nHitsEventBegin[i] + j); k++) {
                 cout << "hitData: " << bitset<8>(*(pHitData)) << endl;
                 cout << "subEventId: " << *(pSubEventId) << endl;
                 cout << "barCode: " << *(pBarCode) << endl;
@@ -181,4 +169,3 @@ void printEvents() {
     }
 
 }
-

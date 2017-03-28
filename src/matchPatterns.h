@@ -4,7 +4,10 @@
 // matchPatterns.h
 // Searches for matches between events and patterns
 
-void matchByPatterns();
-void matchByEvents();
+#include "patternReader.h"
+#include "eventReader.h"
+
+void matchByPatterns(const PatternContainer& p, const EventContainer& e);
+void matchByEvents(const PatternContainer& p, const EventContainer& e);
 
 #endif

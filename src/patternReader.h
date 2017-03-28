@@ -9,21 +9,23 @@
 
 using namespace std;
 
-void readPatterns(string patternFile);
-void printPatterns();
-
 struct PatternHeader {
     unsigned int nHitPatt;
     int nGroups;
     unsigned int nLayers;
 };
 
-extern PatternHeader patternHeader;
-extern vector<int> nPattInGrp;
-extern vector<int> hashId_array;
-extern vector<unsigned short> layerSet;
-extern vector<unsigned short*> layerSetGroupBegin;
-extern vector<unsigned char> hitArray;
-extern vector<unsigned char*> hitArrayGroupBegin;
+struct PatternContainer {
+    PatternHeader header;
+    vector<int> nPattInGrp;
+    vector<int> hashId_array;
+    vector<unsigned short> layerSet;
+    vector<unsigned short*> layerSetGroupBegin;
+    vector<unsigned char> hitArray;
+    vector<unsigned char*> hitArrayGroupBegin;
+};
+
+void readPatterns(string patternFile, PatternContainer& p);
+void printPatterns(const PatternContainer& p);
 
 #endif

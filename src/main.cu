@@ -1,7 +1,7 @@
-#include <iostream>
-#include <vector>
 #include <string>
+#include <iostream>
 #include <getopt.h>
+#include <cuda_runtime.h>
 
 #include "eventReader.h"
 #include "patternReader.h"
@@ -11,11 +11,12 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
+
     string patternFile = "inputs/pattern_groups.bin";
     string eventFile = "inputs/single_track_hit_events.bin";
     char opt;
 
-    while((opt = getopt(argc,argv,"e:p:")) != EOF) {
+    while((opt = getopt(argc,argv,"e:p:")) != -1) {
         switch(opt)
         {
             case 'e': eventFile = optarg; break;
@@ -24,12 +25,16 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    readPatterns(patternFile);
-    //printPatterns();
-    readEvents(eventFile);
-    //printEvents();
+    PatternContainer p;
+    readPatterns(patternFile, p);
+    //printPatterns(p);
 
-    matchByEvents();
+    EventContainer e;
+    readEvents(eventFile, e);
+    //printEvents(e);
+
+    matchByEvents(p, e);
+    matchByPatterns(p, e);
 
     return 0;
 }
