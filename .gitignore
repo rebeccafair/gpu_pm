@@ -1,2 +1,5 @@
-patternTest
+events
+patterns
 obj/*
+bin/*
+

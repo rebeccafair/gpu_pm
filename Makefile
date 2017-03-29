@@ -8,8 +8,7 @@
 EXECUTABLE      := patternTest
 
 # # Cuda source files (compiled with nvcc)
-#CUFILES_sm_35   := KernelDriver.cu
-CUFILES_sm_35   := main.cu
+CUFILES_sm_35   := gpu_test.cu main.cu
 
 # # C/C++ source files (compiled with gcc / c++)
 

@@ -6,6 +6,7 @@
 #include "eventReader.h"
 #include "patternReader.h"
 #include "matchPatterns.h"
+#include "gpu_test.h"
 
 using namespace std;
 
@@ -33,8 +34,11 @@ int main(int argc, char* argv[]) {
     readEvents(eventFile, e);
     //printEvents(e);
 
-    matchByEvents(p, e);
-    matchByPatterns(p, e);
+    //matchByEvents(p, e);
+    //matchByPatterns(p, e);
+
+    GpuContext ctx;
+    copyContextToGpu(p, e, ctx);
 
     return 0;
 }
