@@ -39,6 +39,8 @@ int main(int argc, char* argv[]) {
 
     GpuContext ctx;
     copyContextToGpu(p, e, ctx);
+    runTestKernel(p, e, ctx);
+    deleteGpuContext(ctx);
 
     return 0;
 }

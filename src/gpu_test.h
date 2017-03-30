@@ -22,10 +22,14 @@ struct GpuContext {
     unsigned int *d_hitDataEventIndices;
 
     // Outs
-    int *d_hashId_out;
+    int *d_nEventMatches;
 };
 
 void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
+
+void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
+
+void deleteGpuContext(GpuContext& ctx);
 
 __global__ void testKernel(const int *hashId, const unsigned int *hashIdEventBegin, int *hashId_out, int N);
 
