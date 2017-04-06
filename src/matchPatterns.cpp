@@ -21,6 +21,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     vector<int> nEventMatches(e.header.nEvents);
+    vector<int> matchingPattIds;
 
     auto t_begin = Clock::now();
 
@@ -58,11 +59,11 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
             }
         }
 
-        //cout << "Matching groups for event " << event + 1 << ": ";
-        //for (int i = 0; i < matchingGroups.size(); i++) {
-        //    cout << matchingGroups[i] + 1 << " ";
-        //}
-        //cout << endl;
+        cout << "Matching groups for event " << event + 1 << ": ";
+        for (int i = 0; i < matchingGroups.size(); i++) {
+            cout << matchingGroups[i] + 1 << " ";
+        }
+        cout << endl;
 
         // For each matching group, loop through layers 
         for (int i = 0; i < matchingGroups.size(); i++) {
@@ -155,6 +156,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
                     //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << endl;
+                    matchingPattIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
             }
@@ -164,8 +166,15 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
 
     int totalMatches = 0;
     for (int event = 0; event < e.header.nEvents; event++) {
-        totalMatches += nEventMatches[event];
         cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
+        if (nEventMatches[event] > 0) {
+            cout << "Matching pattern ids:";
+            for (int patt = 0; patt < nEventMatches[event]; patt++) {
+                cout << " " << matchingPattIds[totalMatches + patt];
+            }
+            cout << endl;
+        }
+        totalMatches += nEventMatches[event];
     }
     cout << "Total matches: " << totalMatches << endl;
     cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
@@ -178,6 +187,7 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e) {
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     vector<int> nEventMatches(e.header.nEvents);
+    vector<int> matchingPattIds;
 
     auto t_begin = Clock::now();
 
@@ -307,7 +317,8 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e) {
             // Get total number of matches for this event
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
-                    //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << endl;
+                    //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << " pattId: " << ((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt << endl;
+                    matchingPattIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
             }
@@ -319,8 +330,15 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e) {
 
     int totalMatches = 0;
     for (int event = 0; event < e.header.nEvents; event++) {
-        totalMatches += nEventMatches[event];
         cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
+        if (nEventMatches[event] > 0) {
+            cout << "Matching pattern ids:";
+            for (int patt = 0; patt < nEventMatches[event]; patt++) {
+                cout << " " << matchingPattIds[totalMatches + patt];
+            }
+            cout << endl;
+        }
+        totalMatches += nEventMatches[event];
     }
     cout << "Total matches: " << totalMatches << endl;
     cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
