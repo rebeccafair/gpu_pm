@@ -22,7 +22,8 @@ struct GpuContext {
     unsigned int *d_hitDataEventIndices;
 
     // Outs
-    int *d_nEventMatches;
+    int *d_nMatches;
+    int *d_matchingPattIds;
 };
 
 void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
@@ -31,7 +32,13 @@ void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContex
 
 void deleteGpuContext(GpuContext& ctx);
 
-__global__ void testKernel(const int *hashId, const unsigned int *hashIdEventBegin, int *hashId_out, int N);
+__global__ void testKernel(const int *hashId_array, const unsigned char *hitArray,
+                           const unsigned int *hitArrayGroupIndices, const int *hashId,
+                           const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                           const unsigned int *nHitsEventIndices, const unsigned char *hitData,
+                           const unsigned int *hitDataEventIndices, int *matchingPattIds,
+                           int *nMatches, const int nGroups, const int nLayers, const int eventId);
+
 
 #endif
 
