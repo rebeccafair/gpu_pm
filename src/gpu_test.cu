@@ -143,7 +143,7 @@ void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContex
     if (err != cudaSuccess) cerr << "Error: failed to record timer start event\n" << cudaGetErrorString(err) << endl;
 
     // Calculate number of threads/blocks required
-    int threadsPerBlock =256;
+    int threadsPerBlock = 128;
     int blocksPerGrid = p.header.nGroups;
 
     // Run kernel for each event
@@ -280,13 +280,11 @@ __global__ void testKernel(const int *hashId_array, const unsigned char *hitArra
     // If there are enough hashId matches, loop through patterns in group
     if (nHashMatches >= nRequiredMatches) {
         int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
-        //if(threadIdx.x == 0) { printf("Match! For group %i, nPatt: %i\n",grp,nPattInGrp); }
         int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
         // Loop as many times as necessary for all threads to cover all patterns
+        extern __shared__ unsigned int nPattMatches[];
         for (int n = 0; n < nLoops; n++) {
-            //extern __shared__ unsigned int nPattMatches[];
             int pattNum = n*blockDim.x/nLayers + row;
-            __shared__ unsigned int nPattMatches[32];
 
             // Only continue if thread isn't overflowing the number of patterns in the group
             if ( pattNum < nPattInGrp) {
