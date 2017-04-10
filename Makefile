@@ -14,13 +14,12 @@ CUFILES_sm_35   := gpu_test.cu main.cu
 
 SRCDIR=./src/
 CCFILES := eventReader.cpp patternReader.cpp matchPatterns.cpp
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++11 -O3
 
 # # Compiler-specific flags
 #NVCCFLAGS      := --ptxas-options="-v" -std=c++11
-
-#NVCCFLAGS :=  --keep
-
+#NVCCFLAGS := -lineinfo # For getting line number in cuda-memcheck
+#NVCCFLAGS := -O3
 # ################################################################################
 # # Rules and targets
 
