@@ -6,22 +6,19 @@
 #include "common.h"
 #include "eventReader.h"
 #include "patternReader.h"
+#include "matchResults.h"
 
-#include "matchPatterns.h"
+#include "cpuMatcher.h"
 
 using namespace std;
 
-void matchByEvents(const PatternContainer& p, const EventContainer& e);
-void matchByPatterns(const PatternContainer& p, const EventContainer& e);
-
-void matchByEvents(const PatternContainer& p, const EventContainer& e) {
+void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResults& mr) {
 
     unsigned char* hitDataCollBegin;
 
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     vector<int> nEventMatches(e.header.nEvents);
-    vector<int> matchingPattIds;
 
     auto t_begin = Clock::now();
 
@@ -59,11 +56,11 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
             }
         }
 
-        cout << "Matching groups for event " << event + 1 << ": ";
+        /*cout << "Matching groups for event " << event + 1 << ": ";
         for (int i = 0; i < matchingGroups.size(); i++) {
             cout << matchingGroups[i] + 1 << " ";
         }
-        cout << endl;
+        cout << endl;*/
 
         // For each matching group, loop through layers 
         for (int i = 0; i < matchingGroups.size(); i++) {
@@ -156,7 +153,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
                     //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << endl;
-                    matchingPattIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
+                    mr.patternIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
             }
@@ -164,30 +161,30 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e) {
     } // End loop through events
     auto t_end = Clock::now();
 
-    int totalMatches = 0;
+    mr.nMatches = 0;
     for (int event = 0; event < e.header.nEvents; event++) {
-        cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
+        /*cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
         if (nEventMatches[event] > 0) {
             cout << "Matching pattern ids:";
             for (int patt = 0; patt < nEventMatches[event]; patt++) {
-                cout << " " << matchingPattIds[totalMatches + patt];
+                cout << " " << mr.patternIds[mr.nMatches + patt];
             }
             cout << endl;
-        }
-        totalMatches += nEventMatches[event];
+        }*/
+        mr.nMatches += nEventMatches[event];
     }
-    cout << "Total matches: " << totalMatches << endl;
+    //cout << "Total matches: " << mr.nMatches << endl;
     cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
 }
 
-void matchByPatterns(const PatternContainer& p, const EventContainer& e) {
+void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchResults& mr) {
 
     unsigned char* hitDataCollBegin;
 
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     vector<int> nEventMatches(e.header.nEvents);
-    vector<int> matchingPattIds;
+    //vector<int> matchingPattIds;
 
     auto t_begin = Clock::now();
 
@@ -318,7 +315,7 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e) {
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
                     //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << " pattId: " << ((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt << endl;
-                    matchingPattIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
+                    mr.patternIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
             }
@@ -328,18 +325,18 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e) {
     } // End loop through groups
     auto t_end = Clock::now();
 
-    int totalMatches = 0;
+    mr.nMatches = 0;
     for (int event = 0; event < e.header.nEvents; event++) {
-        cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
+        /*cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
         if (nEventMatches[event] > 0) {
-            cout << "Matching pattern ids:";
+            //cout << "Matching pattern ids:";
             for (int patt = 0; patt < nEventMatches[event]; patt++) {
-                cout << " " << matchingPattIds[totalMatches + patt];
+                cout << " " << mr.patternIds[mr.nMatches + patt];
             }
             cout << endl;
-        }
-        totalMatches += nEventMatches[event];
+        }*/
+        mr.nMatches += nEventMatches[event];
     }
-    cout << "Total matches: " << totalMatches << endl;
+    //cout << "Total matches: " << mr.nMatches << endl;
     cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
 }

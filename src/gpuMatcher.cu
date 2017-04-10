@@ -8,22 +8,12 @@
 
 #include "eventReader.h"
 #include "patternReader.h"
+#include "matchResults.h"
 #include "tools.h"
 
-#include "gpu_test.h"
+#include "gpuMatcher.h"
 
 using namespace std;
-
-void copyContextToGpu(const PatternContainer, const EventContainer, GpuContext);
-void runTestKernel(const PatternContainer, const EventContainer, GpuContext);
-void deleteGpuContext(GpuContext);
-__global__ void testKernel(const int *hashId_array, const unsigned char *hitArray,
-                           const unsigned int *hitArrayGroupIndices, const int *hashId,
-                           const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                           const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                           const unsigned int *hitDataEventIndices, int *matchingPattIds,
-                           int *nMatches, const int nGroups, const int nLayers, const int eventId);
-
 
 void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuContext& ctx) {
     cudaError_t err = cudaSuccess;
@@ -122,13 +112,8 @@ void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuCon
 };
 
 
-void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContext& ctx) {
+void runMatchKernel(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr) {
     cudaError_t err = cudaSuccess;
-
-    // Allocate and initialise vector to store result
-    int matchingPattIds_size = sizeof(int)*10000;
-    vector<int> matchingPattIds(matchingPattIds_size);
-    int nMatches;
 
     // Create timer events
     cudaEvent_t start;
@@ -149,10 +134,10 @@ void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContex
     // Run kernel for each event
     int nPattMatchesSize = threadsPerBlock/p.header.nLayers;
     for (int i = 0; i < e.header.nEvents; i++ ) {
-        testKernel<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
-                                                       ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
-                                                       ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
-                                                       ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
+        match<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
+                                                                    ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
+                                                                    ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
+                                                                    ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
     }
     cudaDeviceSynchronize();
 
@@ -171,23 +156,13 @@ void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContex
     cout << "Average kernel time is " << msecPerEvent << " ms" << endl;
 
     // Copy result back to host memory
-    err = cudaMemcpy(&matchingPattIds[0], ctx.d_matchingPattIds, matchingPattIds_size, cudaMemcpyDeviceToHost);
-    if (err != cudaSuccess) cerr << "Error: d_matchingPattIds not copied from device to host" << endl;
-    err = cudaMemcpy(&nMatches, ctx.d_nMatches, sizeof(int), cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(&mr.nMatches, ctx.d_nMatches, sizeof(int), cudaMemcpyDeviceToHost);
     if (err != cudaSuccess) cerr << "Error: d_nMatches not copied from device to host" << endl;
-
-    cout << "Total matches: " << nMatches << endl;
-    if (nMatches != 5519) {
-        cerr << "Error: Incorrect number of matches found" << endl;
-        cerr << "Reference matches: 5519" << endl;
-        cerr << "Matches found: " << nMatches << endl;
-    }
-    for (int i = 0; i < nMatches; i++) {
-        cout << "Matching id: " << matchingPattIds[i] << endl;
-    }
+    mr.patternIds.resize(mr.nMatches);
+    err = cudaMemcpy(&mr.patternIds[0], ctx.d_matchingPattIds, mr.nMatches*sizeof(int), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) cerr << "Error: d_matchingPattIds not copied from device to host" << endl;
 
 };
-
 
 void deleteGpuContext(GpuContext& ctx) {
     cudaError_t err = cudaSuccess;
@@ -241,10 +216,10 @@ void deleteGpuContext(GpuContext& ctx) {
 
 };
 
-__global__ void testKernel(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
-                           const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                           const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
-                           int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
+__global__ void match(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
+                      const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                      const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
+                      int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     int grp = blockIdx.x;

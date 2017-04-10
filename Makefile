@@ -8,12 +8,12 @@
 EXECUTABLE      := patternTest
 
 # # Cuda source files (compiled with nvcc)
-CUFILES_sm_35   := gpu_test.cu main.cu
+CUFILES_sm_35   := gpuMatcher.cu main.cu
 
 # # C/C++ source files (compiled with gcc / c++)
 
 SRCDIR=./src/
-CCFILES := eventReader.cpp patternReader.cpp matchPatterns.cpp
+CCFILES := eventReader.cpp patternReader.cpp cpuMatcher.cpp
 CXXFLAGS += -std=c++11 -O3
 
 # # Compiler-specific flags

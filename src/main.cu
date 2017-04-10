@@ -5,8 +5,9 @@
 
 #include "eventReader.h"
 #include "patternReader.h"
-#include "matchPatterns.h"
-#include "gpu_test.h"
+#include "cpuMatcher.h"
+#include "gpuMatcher.h"
+#include "matchResults.h"
 
 using namespace std;
 
@@ -34,12 +35,16 @@ int main(int argc, char* argv[]) {
     readEvents(eventFile, e);
     //printEvents(e);
 
-    //matchByEvents(p, e);
-    //matchByPatterns(p, e);
+    MatchResults cpuResults;
+    matchByEvents(p, e, cpuResults);
+    //matchByPatterns(p, e, cpuResults);
+    //printMatchResults(cpuResults);
 
     GpuContext ctx;
+    MatchResults gpuResults;
     copyContextToGpu(p, e, ctx);
-    runTestKernel(p, e, ctx);
+    runMatchKernel(p, e, ctx, gpuResults);
+    //printMatchResults(gpuResults);
     deleteGpuContext(ctx);
 
     return 0;

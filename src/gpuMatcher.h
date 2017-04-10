@@ -3,6 +3,7 @@
 
 #include "eventReader.h"
 #include "patternReader.h"
+#include "matchResults.h"
 
 struct GpuContext {
 
@@ -28,16 +29,16 @@ struct GpuContext {
 
 void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
 
-void runTestKernel(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
+void runMatchKernel(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr);
 
 void deleteGpuContext(GpuContext& ctx);
 
-__global__ void testKernel(const int *hashId_array, const unsigned char *hitArray,
-                           const unsigned int *hitArrayGroupIndices, const int *hashId,
-                           const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                           const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                           const unsigned int *hitDataEventIndices, int *matchingPattIds,
-                           int *nMatches, const int nGroups, const int nLayers, const int eventId);
+__global__ void match(const int *hashId_array, const unsigned char *hitArray,
+                      const unsigned int *hitArrayGroupIndices, const int *hashId,
+                      const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                      const unsigned int *nHitsEventIndices, const unsigned char *hitData,
+                      const unsigned int *hitDataEventIndices, int *matchingPattIds,
+                      int *nMatches, const int nGroups, const int nLayers, const int eventId);
 
 
 #endif
