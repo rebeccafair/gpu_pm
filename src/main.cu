@@ -8,6 +8,7 @@
 #include "cpuMatcher.h"
 #include "gpuMatcher.h"
 #include "matchResults.h"
+#include "testMatches.h"
 
 using namespace std;
 
@@ -27,25 +28,32 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Read pattern data
     PatternContainer p;
     readPatterns(patternFile, p);
     //printPatterns(p);
 
+    // Read event data
     EventContainer e;
     readEvents(eventFile, e);
     //printEvents(e);
 
+    // Perform cpu pattern matching
     MatchResults cpuResults;
     matchByEvents(p, e, cpuResults);
     //matchByPatterns(p, e, cpuResults);
     //printMatchResults(cpuResults);
 
+    // Perform gpu setup and pattern matching
     GpuContext ctx;
     MatchResults gpuResults;
     copyContextToGpu(p, e, ctx);
     runMatchKernel(p, e, ctx, gpuResults);
     //printMatchResults(gpuResults);
     deleteGpuContext(ctx);
+
+    // Compare cpu/gpu results
+    compareMatches(cpuResults, gpuResults);
 
     return 0;
 }
