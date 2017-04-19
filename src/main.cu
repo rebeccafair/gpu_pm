@@ -44,16 +44,23 @@ int main(int argc, char* argv[]) {
     //matchByPatterns(p, e, cpuResults);
     //printMatchResults(cpuResults);
 
-    // Perform gpu setup and pattern matching
-    GpuContext ctx;
-    MatchResults gpuResults;
-    copyContextToGpu(p, e, ctx);
-    runMatchKernel(p, e, ctx, gpuResults);
-    //printMatchResults(gpuResults);
-    deleteGpuContext(ctx);
+    // Perform gpu setup and pattern matching by pattern layer
+    GpuContext ctx1;
+    MatchResults gpuResults1;
+    createGpuContext(p, e, ctx1);
+    runMatchByLayer(p, e, ctx1, gpuResults1,512);
+    deleteGpuContext(ctx1);
+
+    // Perform gpu setup and pattern matching by pattern block
+    GpuContext ctx2;
+    MatchResults gpuResults2;
+    createGpuContext(p, e, ctx2);
+    runMatchByBlock(p, e, ctx2, gpuResults2, 128);
+    deleteGpuContext(ctx2);
 
     // Compare cpu/gpu results
-    compareMatches(cpuResults, gpuResults);
+    compareMatches(cpuResults, gpuResults1);
+    compareMatches(cpuResults, gpuResults2);
 
     return 0;
 }

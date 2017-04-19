@@ -15,7 +15,7 @@
 
 using namespace std;
 
-void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuContext& ctx) {
+void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuContext& ctx) {
     cudaError_t err = cudaSuccess;
 
     // For all group/event begins, calculate indices that are pointed to
@@ -112,7 +112,7 @@ void copyContextToGpu(const PatternContainer& p, const EventContainer& e, GpuCon
 };
 
 
-void runMatchKernel(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr) {
+void runMatchByBlock(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock) {
     cudaError_t err = cudaSuccess;
 
     // Create timer events
@@ -127,17 +127,16 @@ void runMatchKernel(const PatternContainer& p, const EventContainer& e, GpuConte
     err = cudaEventRecord(start, NULL);
     if (err != cudaSuccess) cerr << "Error: failed to record timer start event\n" << cudaGetErrorString(err) << endl;
 
-    // Calculate number of threads/blocks required
-    int threadsPerBlock = 128;
+    // Calculate number of blocks required
     int blocksPerGrid = p.header.nGroups;
 
     // Run kernel for each event
-    int nPattMatchesSize = threadsPerBlock/p.header.nLayers;
+    int nPattMatchesSize = threadsPerBlock/p.header.nLayers*sizeof(unsigned int);
     for (int i = 0; i < e.header.nEvents; i++ ) {
-        match<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
-                                                                    ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
-                                                                    ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
-                                                                    ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
+        matchByBlock<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
+                                                                           ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
+                                                                           ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
+                                                                           ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
     }
     cudaDeviceSynchronize();
 
@@ -153,7 +152,7 @@ void runMatchKernel(const PatternContainer& p, const EventContainer& e, GpuConte
     if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
     cout << "Ran kernel " << e.header.nEvents << " times in " << msecTotal << " ms" << endl;
     float msecPerEvent = msecTotal/e.header.nEvents;
-    cout << "Average kernel time is " << msecPerEvent << " ms" << endl;
+    cout << "Average matchByBlock kernel time with " << threadsPerBlock << " threads is " << msecPerEvent << " ms" << endl;
 
     // Copy result back to host memory
     err = cudaMemcpy(&mr.nMatches, ctx.d_nMatches, sizeof(int), cudaMemcpyDeviceToHost);
@@ -163,6 +162,58 @@ void runMatchKernel(const PatternContainer& p, const EventContainer& e, GpuConte
     if (err != cudaSuccess) cerr << "Error: d_matchingPattIds not copied from device to host" << endl;
 
 };
+
+void runMatchByLayer(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock) {
+    cudaError_t err = cudaSuccess;
+
+    // Create timer events
+    cudaEvent_t start;
+    err = cudaEventCreate(&start);
+    if (err != cudaSuccess) cerr << "Error: failed to create timer start event\n" << cudaGetErrorString(err) << endl;
+    cudaEvent_t stop;
+    err = cudaEventCreate(&stop);
+    if (err != cudaSuccess) cerr << "Error: failed to create timer stop event\n" << cudaGetErrorString(err) << endl;
+
+    // Record timer start event
+    err = cudaEventRecord(start, NULL);
+    if (err != cudaSuccess) cerr << "Error: failed to record timer start event\n" << cudaGetErrorString(err) << endl;
+
+    // Calculate number of blocks required
+    int blocksPerGrid = p.header.nGroups;
+
+    // Run kernel for each event
+    int nPattMatchesSize = p.nPattInGrp[0]*sizeof(unsigned int);
+    for (int i = 0; i < e.header.nEvents; i++ ) {
+        matchByLayer<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
+                                                                           ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
+                                                                           ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
+                                                                           ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
+    }
+    cudaDeviceSynchronize();
+
+    // Record timer stop event
+    err = cudaEventRecord(stop, NULL);
+    if (err != cudaSuccess) cerr << "Error: failed to record timer stop event\n" << cudaGetErrorString(err) << endl;
+    err = cudaEventSynchronize(stop);
+    if (err != cudaSuccess) cerr << "Error: failed to synchronize on stop event\n" << cudaGetErrorString(err) << endl;
+
+    // Calculate elapsed time
+    float msecTotal = 0.0f;
+    err = cudaEventElapsedTime(&msecTotal, start, stop);
+    if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
+    cout << "Ran kernel " << e.header.nEvents << " times in " << msecTotal << " ms" << endl;
+    float msecPerEvent = msecTotal/e.header.nEvents;
+    cout << "Average matchByLayer kernel time with " << threadsPerBlock << " threads is " << msecPerEvent << " ms" << endl;
+
+    // Copy result back to host memory
+    err = cudaMemcpy(&mr.nMatches, ctx.d_nMatches, sizeof(int), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) cerr << "Error: d_nMatches not copied from device to host" << endl;
+    mr.patternIds.resize(mr.nMatches);
+    err = cudaMemcpy(&mr.patternIds[0], ctx.d_matchingPattIds, mr.nMatches*sizeof(int), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) cerr << "Error: d_matchingPattIds not copied from device to host" << endl;
+
+};
+
 
 void deleteGpuContext(GpuContext& ctx) {
     cudaError_t err = cudaSuccess;
@@ -216,10 +267,10 @@ void deleteGpuContext(GpuContext& ctx) {
 
 };
 
-__global__ void match(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
-                      const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                      const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
-                      int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
+__global__ void matchByBlock(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
+                             const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                             const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
+                             int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
     int nRequiredMatches = 7;
     int nMaxRows = 22;
     int grp = blockIdx.x;
@@ -258,6 +309,7 @@ __global__ void match(const int *hashId_array, const unsigned char *hitArray, co
         int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
         // Loop as many times as necessary for all threads to cover all patterns
         extern __shared__ unsigned int nPattMatches[];
+
         for (int n = 0; n < nLoops; n++) {
             int pattNum = n*blockDim.x/nLayers + row;
 
@@ -334,3 +386,134 @@ __global__ void match(const int *hashId_array, const unsigned char *hitArray, co
 
     }
 }
+
+__global__ void matchByLayer(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
+                             const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                             const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
+                             int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
+    int nRequiredMatches = 7;
+    int nMaxRows = 22;
+    int grp = blockIdx.x;
+
+    __shared__ unsigned int nHashMatches;
+    __shared__ unsigned int nWildcards;
+
+    // Get first nLayers threads to check the group hashIds and check if they are
+    // a potential match for this event
+    if (threadIdx.x < nLayers) {
+        int grpCheckHashId = hashId_array[grp*nLayers + threadIdx.x];
+        if (grpCheckHashId == -1) {
+            // Automatically match if layer is wildcard
+            atomicAdd(&nHashMatches,1);
+            atomicAdd(&nWildcards,1);
+        } else {
+            // Otherwise loop through collections looking for match
+            int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
+            for (int coll = 0; coll < nColl; coll++) {
+                if (hashId[hashIdEventIndices[eventId] + coll] == grpCheckHashId) {
+                    atomicAdd(&nHashMatches,1);
+                    // Break out of collection if a match is found
+                    break;
+                }
+            }
+        }
+
+    }
+    __syncthreads();
+
+    // If there are enough hashId matches, loop through patterns in group
+    if (nHashMatches >= nRequiredMatches) {
+        int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
+        extern __shared__ unsigned int nPattMatches[];
+
+        // Initialise nPattMatches to zero
+        int mLoops = nPattInGrp/blockDim.x + 1;
+        for (int m = 0; m < mLoops; m++) {
+            int pattNum = m*blockDim.x + threadIdx.x;
+            if (pattNum < nPattInGrp) {
+                nPattMatches[pattNum] = 0;
+            }
+        }
+        __syncthreads();
+
+        // Loop as many times as necessary for all threads to cover all patterns
+        int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
+        for (int n = 0; n < nLoops; n++) {
+            int pattNum = (n*blockDim.x + threadIdx.x)%nPattInGrp;
+            int lyr = (n*blockDim.x + threadIdx.x)/nPattInGrp;
+
+            // Only continue if thread isn't overflowing the number of layers
+            if ( lyr < nLayers) {
+                int lyrHashId = hashId_array[grp*nLayers + lyr];
+
+                // Automatically match if wildcard layer
+                if (lyrHashId == -1) {
+                    atomicAdd(&nPattMatches[pattNum],1);
+                } else {
+                    // Get pattern hit data
+                    unsigned char pattHit = hitArray[hitArrayGroupIndices[grp] + pattNum*nLayers + lyr];// n*blockDim.x + threadIdx.x];
+                    // Decode pattern hit data
+                    unsigned char pattDontCareBits = pattHit & 3;
+                    unsigned char dontCareBitmask = (7 >> (3 - pattDontCareBits));
+                    unsigned char pattHitPos = ((pattHit >> 2) & 63);
+
+                    // Loop through collections looking for hashId match
+                    int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
+                    const unsigned char *pHitData = &hitData[hitDataEventIndices[eventId]];
+                    for (int coll = 0; coll < nColl; coll++) {
+                        if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
+                            // Once the matching collection has been found, loop through hits
+                            for (int hit = 0; hit < nHits[nHitsEventIndices[eventId] + coll]; hit++) {
+                                unsigned char eventHitPos = (*(pHitData + hit) & 127);
+                                unsigned char eventIsPixel = ((*(pHitData + hit) >> 7) & 1);
+                                // Check if pixel or strip
+                                if (eventIsPixel) {
+                                    // Pixel - decode pixel column number
+                                    unsigned char eventPixCol = (eventHitPos & 3);
+                                    unsigned char pattPixCol = pattHitPos/nMaxRows;
+                                    if ( eventPixCol == pattPixCol ) {
+                                        // If pixel columns match, decode pixel row, mask with don't care bits and check
+                                        // for a match
+                                        unsigned char eventPixRow = (((eventHitPos >> 2) & 31) | dontCareBitmask);
+                                        unsigned char pattPixRow = (pattHitPos%nMaxRows | dontCareBitmask);
+                                        if ( eventPixRow == pattPixRow ) {
+                                                atomicAdd(&nPattMatches[pattNum],1);
+                                                break;
+                                        }
+                                    }
+                                } else {
+                                    // Strip - decode superstrip values, mask with pattern don't care bits and check
+                                    // for a match
+                                    unsigned char eventSuperstrip = (((eventHitPos >> 2) & 31) | dontCareBitmask);
+                                    unsigned char pattSuperstrip = (pattHitPos | dontCareBitmask);
+                                    if ( eventSuperstrip == pattSuperstrip ) {
+                                        atomicAdd(&nPattMatches[pattNum],1);
+                                        break;
+                                    }
+                                }
+                            }
+                            break; // Break once the matching collection has been checked
+                        }
+                        pHitData += nHits[nHitsEventIndices[eventId] + coll];
+                    }
+                }
+            } // End if lyr < nLayers
+        } // End loop over patterns
+
+        __syncthreads();
+        //int mLoops = nPattInGrp/blockDim.x + 1;
+        // Output matching pattern ids to array
+        for (int m = 0; m < mLoops; m++) {
+            int pattNum = m*blockDim.x + threadIdx.x;
+            if (pattNum < nPattInGrp) {
+                if (nPattMatches[pattNum] >= nRequiredMatches) {
+                    int i = atomicAdd(nMatches,1);
+                    int pattId = ((hitArrayGroupIndices[grp] - hitArrayGroupIndices[0])/nLayers) + pattNum;
+                    matchingPattIds[i] = pattId;
+                }
+            }
+        }
+
+    }
+}
+
