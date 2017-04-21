@@ -92,9 +92,8 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
                             for (int j = 0; j < nMatchingPatterns; j++) {
                                 int patt = ( lyr == 0 ) ? j : matchingPatterns[j];
                                 // Decode pattern data
-                                unsigned char pattDontCareBits = *(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) & 3;
-                                unsigned char dontCareBitmask = (7 >> (3 - pattDontCareBits));
-                                unsigned char pattHitPos = ((*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) >> 2) & 63);
+                                unsigned char dontCareBitmask = *(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) & 3;
+                                unsigned char pattHitPos = ((*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) >> 2) & 31);
 
                                 // Loop through hits in matching collections
                                 for (int hit = 0; hit < *(e.nHitsEventBegin[event] + coll); hit++) {
@@ -254,9 +253,8 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
                             for (int j = 0; j < nMatchingPatterns; j++) {
                                 int patt = ( lyr == 0 ) ? j : matchingPatterns[j];
                                 // Decode pattern data
-                                unsigned char pattDontCareBits = *(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) & 3;
-                                unsigned char dontCareBitmask = (7 >> (3 - pattDontCareBits));
-                                unsigned char pattHitPos = ((*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) >> 2) & 63);
+                                unsigned char dontCareBitmask = *(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) & 3;
+                                unsigned char pattHitPos = ((*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) >> 2) & 31);
 
                                 // Loop through hits in matching collections
                                 for (int hit = 0; hit < *(e.nHitsEventBegin[event] + coll); hit++) {

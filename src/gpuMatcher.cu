@@ -328,9 +328,8 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
                     // Get pattern hit data
                     unsigned char pattHit = hitArray[hitArrayGroupIndices[grp] + n*blockDim.x + threadIdx.x];
                     // Decode pattern hit data
-                    unsigned char pattDontCareBits = pattHit & 3;
-                    unsigned char dontCareBitmask = (7 >> (3 - pattDontCareBits));
-                    unsigned char pattHitPos = ((pattHit >> 2) & 63);
+                    unsigned char dontCareBitmask = pattHit & 3;
+                    unsigned char pattHitPos = ((pattHit >> 2) & 31);
 
                     // Loop through collections looking for hashId match
                     int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
@@ -453,9 +452,8 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
                     // Get pattern hit data
                     unsigned char pattHit = hitArray[hitArrayGroupIndices[grp] + pattNum*nLayers + lyr];// n*blockDim.x + threadIdx.x];
                     // Decode pattern hit data
-                    unsigned char pattDontCareBits = pattHit & 3;
-                    unsigned char dontCareBitmask = (7 >> (3 - pattDontCareBits));
-                    unsigned char pattHitPos = ((pattHit >> 2) & 63);
+                    unsigned char dontCareBitmask = pattHit & 3;
+                    unsigned char pattHitPos = ((pattHit >> 2) & 31);
 
                     // Loop through collections looking for hashId match
                     int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
