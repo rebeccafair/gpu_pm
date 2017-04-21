@@ -276,11 +276,17 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
     int grp = blockIdx.x;
     int lyr = threadIdx.x%nLayers;
     int row = threadIdx.x/nLayers;
-
     __shared__ unsigned int nHashMatches;
     __shared__ unsigned int nWildcards;
 
+    if (threadIdx.x == 0) {
+        nHashMatches = 0;
+        nWildcards = 0;
+    }
+    __syncthreads();
+
     int lyrHashId = hashId_array[grp*nLayers + lyr];
+
     // Get first nLayers threads to check the group hashIds and check if they are
     // a potential match for this event
     if (threadIdx.x < nLayers) {
@@ -396,6 +402,12 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
 
     __shared__ unsigned int nHashMatches;
     __shared__ unsigned int nWildcards;
+
+    if (threadIdx.x == 0) {
+        nHashMatches = 0;
+        nWildcards = 0;
+    }
+    __syncthreads();
 
     // Get first nLayers threads to check the group hashIds and check if they are
     // a potential match for this event
