@@ -319,13 +319,14 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
         for (int n = 0; n < nLoops; n++) {
             int pattNum = n*blockDim.x/nLayers + row;
 
+            // Initialise nPattMatches to zero
+            if (lyr == 0) {
+                nPattMatches[row] = 0;
+            }
+            __syncthreads();
+
             // Only continue if thread isn't overflowing the number of patterns in the group
             if ( pattNum < nPattInGrp) {
-                // Initialise nPattMatches to zero
-                if (lyr == 0) {
-                    nPattMatches[row] = 0;
-                }
-                __syncthreads();
     
                 // Automatically match if wildcard layer
                 if (lyrHashId == -1) {
@@ -511,7 +512,6 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
         } // End loop over patterns
 
         __syncthreads();
-        //int mLoops = nPattInGrp/blockDim.x + 1;
         // Output matching pattern ids to array
         for (int m = 0; m < mLoops; m++) {
             int pattNum = m*blockDim.x + threadIdx.x;
