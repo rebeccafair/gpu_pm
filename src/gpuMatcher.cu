@@ -286,26 +286,28 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
     __syncthreads();
 
     int lyrHashId = hashId_array[grp*nLayers + lyr];
-
-    // Get first nLayers threads to check the group hashIds and check if they are
-    // a potential match for this event
+    // Get first nLayers threads to check if any hashIds are wildcards
     if (threadIdx.x < nLayers) {
         if (lyrHashId == -1) {
             // Automatically match if layer is wildcard
             atomicAdd(&nHashMatches,1);
             atomicAdd(&nWildcards,1);
-        } else {
-            // Otherwise loop through collections looking for match
-            int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
-            for (int coll = 0; coll < nColl; coll++) {
+         }
+    }
+
+    // Get each thread to compare one hashId with one collection from
+    // an event to check for a match
+    int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
+    int cLoops = ((nLayers*nColl)/blockDim.x) + 1;
+    for (int c = 0; c < cLoops; c++) {
+        if (threadIdx.x < nLayers*nColl) {
+            if (lyrHashId != -1) {
+                int coll = c*blockDim.x/nLayers + threadIdx.x/nLayers;
                 if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
                     atomicAdd(&nHashMatches,1);
-                    // Break out of collection if a match is found
-                    break;
                 }
             }
         }
-
     }
     __syncthreads();
 
@@ -410,26 +412,29 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
     }
     __syncthreads();
 
-    // Get first nLayers threads to check the group hashIds and check if they are
-    // a potential match for this event
+    int lyrHashId = hashId_array[grp*nLayers + threadIdx.x%nLayers];
+    // Get first nLayers threads to check if any hashIds are wildcards
     if (threadIdx.x < nLayers) {
-        int grpCheckHashId = hashId_array[grp*nLayers + threadIdx.x];
-        if (grpCheckHashId == -1) {
+        if (lyrHashId == -1) {
             // Automatically match if layer is wildcard
             atomicAdd(&nHashMatches,1);
             atomicAdd(&nWildcards,1);
-        } else {
-            // Otherwise loop through collections looking for match
-            int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
-            for (int coll = 0; coll < nColl; coll++) {
-                if (hashId[hashIdEventIndices[eventId] + coll] == grpCheckHashId) {
+         }
+    }
+
+    // Get each thread to compare one hashId with one collection from
+    // an event to check for a match
+    int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
+    int cLoops = ((nLayers*nColl)/blockDim.x) + 1;
+    for (int c = 0; c < cLoops; c++) {
+        if (threadIdx.x < nLayers*nColl) {
+            if (lyrHashId != -1) {
+                int coll = c*blockDim.x/nLayers + threadIdx.x/nLayers;
+                if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
                     atomicAdd(&nHashMatches,1);
-                    // Break out of collection if a match is found
-                    break;
                 }
             }
         }
-
     }
     __syncthreads();
 
@@ -456,7 +461,7 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
 
             // Only continue if thread isn't overflowing the number of layers
             if ( lyr < nLayers) {
-                int lyrHashId = hashId_array[grp*nLayers + lyr];
+                lyrHashId = hashId_array[grp*nLayers + lyr];
 
                 // Automatically match if wildcard layer
                 if (lyrHashId == -1) {
