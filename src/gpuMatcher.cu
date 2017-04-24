@@ -276,8 +276,12 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
     int grp = blockIdx.x;
     int lyr = threadIdx.x%nLayers;
     int row = threadIdx.x/nLayers;
-    __shared__ unsigned int nHashMatches;
+    int lyrHashId = hashId_array[grp*nLayers + lyr];
+
+    __shared__ unsigned int nHashMatches; // Number of group hashIds that match event collection hashIds
     __shared__ unsigned int nWildcards;
+    __shared__ int matchingCollections[8]; // Size should equal nLayers. Records which collection matches
+                                           // the group hashId of a certain layer
 
     if (threadIdx.x == 0) {
         nHashMatches = 0;
@@ -285,11 +289,12 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
     }
     __syncthreads();
 
-    int lyrHashId = hashId_array[grp*nLayers + lyr];
     // Get first nLayers threads to check if any hashIds are wildcards
     if (threadIdx.x < nLayers) {
+        // Initialise matchingCollections to -1
+        atomicExch(&matchingCollections[lyr],-1);
+        // Automatically match if layer is wildcard
         if (lyrHashId == -1) {
-            // Automatically match if layer is wildcard
             atomicAdd(&nHashMatches,1);
             atomicAdd(&nWildcards,1);
          }
@@ -298,12 +303,13 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
     // Get each thread to compare one hashId with one collection from
     // an event to check for a match
     int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
-    int cLoops = ((nLayers*nColl)/blockDim.x) + 1;
-    for (int c = 0; c < cLoops; c++) {
-        if (threadIdx.x < nLayers*nColl) {
+    int nLoops = ((nLayers*nColl)/blockDim.x) + 1;
+    for (int n = 0; n < nLoops; n++) {
+        int coll = n*blockDim.x/nLayers + threadIdx.x/nLayers;
+        if (coll < nColl) {
             if (lyrHashId != -1) {
-                int coll = c*blockDim.x/nLayers + threadIdx.x/nLayers;
                 if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
+                    atomicExch(&matchingCollections[lyr],coll);
                     atomicAdd(&nHashMatches,1);
                 }
             }
@@ -311,14 +317,22 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
     }
     __syncthreads();
 
-    // If there are enough hashId matches, loop through patterns in group
     if (nHashMatches >= nRequiredMatches) {
-        int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
-        int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
+
+        // Loop through collection hits to find collection hit data
+        int matchingColl = matchingCollections[lyr];
+        const unsigned char *pHitData = &hitData[hitDataEventIndices[eventId]];
+        for (int coll = 0; coll < matchingColl; coll++) {
+            pHitData += nHits[nHitsEventIndices[eventId] + coll];
+        }
+
         // Loop as many times as necessary for all threads to cover all patterns
+        int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
+        nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
         extern __shared__ unsigned int nPattMatches[];
 
         for (int n = 0; n < nLoops; n++) {
+
             int pattNum = n*blockDim.x/nLayers + row;
 
             // Initialise nPattMatches to zero
@@ -329,57 +343,50 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
 
             // Only continue if thread isn't overflowing the number of patterns in the group
             if ( pattNum < nPattInGrp) {
-    
-                // Automatically match if wildcard layer
-                if (lyrHashId == -1) {
-                    atomicAdd(&nPattMatches[row],1);
-                } else {
+
+                if (matchingColl != -1) {
+
                     // Get pattern hit data
                     unsigned char pattHit = hitArray[hitArrayGroupIndices[grp] + n*blockDim.x + threadIdx.x];
                     // Decode pattern hit data
                     unsigned char dontCareBitmask = pattHit & 3;
                     unsigned char pattHitPos = ((pattHit >> 2) & 31);
 
-                    // Loop through collections looking for hashId match
-                    int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
-                    const unsigned char *pHitData = &hitData[hitDataEventIndices[eventId]];
-                    for (int coll = 0; coll < nColl; coll++) {
-                        if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
-                            // Once the matching collection has been found, loop through hits
-                            for (int hit = 0; hit < nHits[nHitsEventIndices[eventId] + coll]; hit++) {
-                                unsigned char eventHitPos = (*(pHitData + hit) & 127);
-                                unsigned char eventIsPixel = ((*(pHitData + hit) >> 7) & 1);
-                                // Check if pixel or strip
-                                if (eventIsPixel) {
-                                    // Pixel - decode pixel column number
-                                    unsigned char eventPixCol = (eventHitPos & 3);
-                                    unsigned char pattPixCol = pattHitPos/nMaxRows;
-                                    if ( eventPixCol == pattPixCol ) {
-                                        // If pixel columns match, decode pixel row, mask with don't care bits and check
-                                        // for a match
-                                        unsigned char eventPixRow = (((eventHitPos >> 2) & 31) | dontCareBitmask);
-                                        unsigned char pattPixRow = (pattHitPos%nMaxRows | dontCareBitmask);
-                                        if ( eventPixRow == pattPixRow ) {
-                                                atomicAdd(&nPattMatches[row],1);
-                                                break;
-                                        }
-                                    }
-                                } else {
-                                    // Strip - decode superstrip values, mask with pattern don't care bits and check
-                                    // for a match
-                                    unsigned char eventSuperstrip = (((eventHitPos >> 2) & 31) | dontCareBitmask);
-                                    unsigned char pattSuperstrip = (pattHitPos | dontCareBitmask);
-                                    if ( eventSuperstrip == pattSuperstrip ) {
-                                        atomicAdd(&nPattMatches[row],1);
-                                        break;
-                                    }
+                    // Loop through hits
+                    for (int hit = 0; hit < nHits[nHitsEventIndices[eventId] + matchingColl]; hit++) {
+                        unsigned char eventHitPos = (*(pHitData + hit) & 127);
+                        unsigned char eventIsPixel = ((*(pHitData + hit) >> 7) & 1);
+                        // Check if pixel or strip
+                        if (eventIsPixel) {
+                            // Pixel - decode pixel column number
+                            unsigned char eventPixCol = (eventHitPos & 3);
+                            unsigned char pattPixCol = pattHitPos/nMaxRows;
+                            if ( eventPixCol == pattPixCol ) {
+                                // If pixel columns match, decode pixel row, mask with don't care bits and check
+                                // for a match
+                                unsigned char eventPixRow = (((eventHitPos >> 2) & 31) | dontCareBitmask);
+                                unsigned char pattPixRow = (pattHitPos%nMaxRows | dontCareBitmask);
+                                if ( eventPixRow == pattPixRow ) {
+                                    atomicAdd(&nPattMatches[row],1);
+                                    break;
                                 }
                             }
-                            break; // Break once the matching collection has been checked
+                        } else {
+                            // Strip - decode superstrip values, mask with pattern don't care bits and check
+                            // for a match
+                            unsigned char eventSuperstrip = (((eventHitPos >> 2) & 31) | dontCareBitmask);
+                            unsigned char pattSuperstrip = (pattHitPos | dontCareBitmask);
+                            if ( eventSuperstrip == pattSuperstrip ) {
+                                atomicAdd(&nPattMatches[row],1);
+                                break;
+                            }
                         }
-                        pHitData += nHits[nHitsEventIndices[eventId] + coll];
-                    }
+                    } // End loop over hits
+
+                } else if ( lyrHashId == -1) {
+                    atomicAdd(&nPattMatches[row],1);
                 }
+
                 __syncthreads();
                 // Output matching pattern ids to array
                 if (lyr == 0) {
@@ -389,10 +396,13 @@ __global__ void matchByBlock(const int *hashId_array, const unsigned char *hitAr
                         matchingPattIds[i] = pattId;
                     }
                 }
-            }
-        } // End loop over patterns
 
-    }
+            } // End if ( pattNum < nPattInGrp)
+
+        } // End nLoops
+
+    } // End if (nHashMatches >= nRequiredMatches)
+
 }
 
 __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
@@ -425,11 +435,11 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
     // Get each thread to compare one hashId with one collection from
     // an event to check for a match
     int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
-    int cLoops = ((nLayers*nColl)/blockDim.x) + 1;
-    for (int c = 0; c < cLoops; c++) {
-        if (threadIdx.x < nLayers*nColl) {
+    int nLoops = ((nLayers*nColl)/blockDim.x) + 1;
+    for (int n = 0; n < nLoops; n++) {
+        int coll = n*blockDim.x/nLayers + threadIdx.x/nLayers;
+        if (coll < nColl) {
             if (lyrHashId != -1) {
-                int coll = c*blockDim.x/nLayers + threadIdx.x/nLayers;
                 if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
                     atomicAdd(&nHashMatches,1);
                 }
@@ -444,9 +454,9 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
         extern __shared__ unsigned int nPattMatches[];
 
         // Initialise nPattMatches to zero
-        int mLoops = nPattInGrp/blockDim.x + 1;
-        for (int m = 0; m < mLoops; m++) {
-            int pattNum = m*blockDim.x + threadIdx.x;
+        nLoops = nPattInGrp/blockDim.x + 1;
+        for (int n= 0; n < nLoops; n++) {
+            int pattNum = n*blockDim.x + threadIdx.x;
             if (pattNum < nPattInGrp) {
                 nPattMatches[pattNum] = 0;
             }
@@ -454,7 +464,7 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
         __syncthreads();
 
         // Loop as many times as necessary for all threads to cover all patterns
-        int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
+        nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
         for (int n = 0; n < nLoops; n++) {
             int pattNum = (n*blockDim.x + threadIdx.x)%nPattInGrp;
             int lyr = (n*blockDim.x + threadIdx.x)/nPattInGrp;
@@ -518,8 +528,9 @@ __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitAr
 
         __syncthreads();
         // Output matching pattern ids to array
-        for (int m = 0; m < mLoops; m++) {
-            int pattNum = m*blockDim.x + threadIdx.x;
+        nLoops = nPattInGrp/blockDim.x + 1;
+        for (int n = 0; n < nLoops; n++) {
+            int pattNum = n*blockDim.x + threadIdx.x;
             if (pattNum < nPattInGrp) {
                 if (nPattMatches[pattNum] >= nRequiredMatches) {
                     int i = atomicAdd(nMatches,1);
