@@ -172,8 +172,8 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
         }*/
         mr.nMatches += nEventMatches[event];
     }
-    //cout << "Total matches: " << mr.nMatches << endl;
-    cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
+    cout << "Total matches: " << mr.nMatches << endl;
+    cout << "CPU Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
 }
 
 void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchResults& mr) {
@@ -335,6 +335,6 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
         }*/
         mr.nMatches += nEventMatches[event];
     }
-    //cout << "Total matches: " << mr.nMatches << endl;
-    cout << "Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
+    cout << "Total matches: " << mr.nMatches << endl;
+    cout << "CPU Matching completed in " << chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << endl;
 }
