@@ -55,7 +55,8 @@ int main(int argc, char* argv[]) {
     GpuContext ctx2;
     MatchResults gpuResults2;
     createGpuContext(p, e, ctx2);
-    runMatchByBlock(p, e, ctx2, gpuResults2, 128);
+    //runMatchByBlockSingle(p, e, ctx2, gpuResults2, 64);
+    runMatchByBlockMulti(p, e, ctx2, gpuResults2, 64, 5000);
     deleteGpuContext(ctx2);
 
     // Compare cpu/gpu results

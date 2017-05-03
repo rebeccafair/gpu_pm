@@ -29,18 +29,29 @@ struct GpuContext {
 
 void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
 
-void runMatchByBlock(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
+void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
+
+void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock, int nBlocks);
+
+void distributeWork(int nBlocks, const PatternContainer& p, vector<int> blockBegin, vector<int> nGroupsInBlock, vector<int> groups); 
 
 void runMatchByLayer(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
 
 void deleteGpuContext(GpuContext& ctx);
 
-__global__ void matchByBlock(const int *hashId_array, const unsigned char *hitArray,
-                             const unsigned int *hitArrayGroupIndices, const int *hashId,
-                             const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                             const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                             const unsigned int *hitDataEventIndices, int *matchingPattIds,
-                             int *nMatches, const int nGroups, const int nLayers, const int eventId);
+__global__ void matchByBlockSingle(const int *hashId_array, const unsigned char *hitArray,
+                                   const unsigned int *hitArrayGroupIndices, const int *hashId,
+                                   const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                                   const unsigned int *nHitsEventIndices, const unsigned char *hitData,
+                                   const unsigned int *hitDataEventIndices, int *matchingPattIds,
+                                   int *nMatches, const int nGroups, const int nLayers, const int eventId);
+
+__global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *hitArray,
+                                  const unsigned int *hitArrayGroupIndices, const int *hashId,
+                                  const unsigned int *hashIdEventIndices, const unsigned int *nHits,
+                                  const unsigned int *nHitsEventIndices, const unsigned char *hitData,
+                                  const unsigned int *hitDataEventIndices, int *matchingPattIds,
+                                  int *nMatches, const int nGroups, const int nLayers, const int eventId);
 
 __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitArray,
                              const unsigned int *hitArrayGroupIndices, const int *hashId,
