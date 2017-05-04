@@ -224,7 +224,7 @@ void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, Gp
     if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
     cout << "Ran kernel " << e.header.nEvents << " times in " << msecTotal << " ms" << endl;
     float msecPerEvent = msecTotal/e.header.nEvents;
-    cout << "Average matchByBlockMulti kernel time with " << threadsPerBlock << " threads is " << msecPerEvent << " ms" << endl;
+    cout << "Average matchByBlockMulti kernel time with " << threadsPerBlock << " threads and " << nBlocks << " blocks is " << msecPerEvent << " ms" << endl;
 
     // Copy result back to host memory
     err = cudaMemcpy(&mr.nMatches, ctx.d_nMatches, sizeof(int), cudaMemcpyDeviceToHost);
