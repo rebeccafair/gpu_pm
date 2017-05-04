@@ -22,6 +22,11 @@ struct GpuContext {
     unsigned char *d_hitData;
     unsigned int *d_hitDataEventIndices;
 
+    // Work distribution vars
+    int *d_blockBegin;
+    int *d_nGroupsInBlock;
+    int *d_groups;
+
     // Outs
     int *d_nMatches;
     int *d_matchingPattIds;
@@ -33,7 +38,7 @@ void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, G
 
 void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock, int nBlocks);
 
-void distributeWork(int nBlocks, const PatternContainer& p, vector<int> blockBegin, vector<int> nGroupsInBlock, vector<int> groups); 
+void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups);
 
 void runMatchByLayer(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
 
@@ -51,7 +56,8 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
                                   const unsigned int *hashIdEventIndices, const unsigned int *nHits,
                                   const unsigned int *nHitsEventIndices, const unsigned char *hitData,
                                   const unsigned int *hitDataEventIndices, int *matchingPattIds,
-                                  int *nMatches, const int nGroups, const int nLayers, const int eventId);
+                                  int *nMatches, const int nGroups, const int nLayers, const int eventId,
+                                  const int *blockBegin, const int *nGroupsInBlock, const int *groups);
 
 __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitArray,
                              const unsigned int *hitArrayGroupIndices, const int *hashId,
