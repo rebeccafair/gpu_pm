@@ -136,7 +136,7 @@ void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, G
         matchByBlockSingle<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                                  ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
                                                                                  ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
-                                                                                 ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
+                                                                                 ctx.d_matchingPattIds, ctx.d_nMatches, i);
     }
     cudaDeviceSynchronize();
 
@@ -205,10 +205,10 @@ void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, Gp
     int nPattMatchesSize = threadsPerBlock/p.header.nLayers*sizeof(unsigned int);
     for (int i = 0; i < e.header.nEvents; i++ ) {
         matchByBlockMulti<<<nBlocks, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
-                                                                                ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
-                                                                                ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
-                                                                                ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i,
-                                                                                ctx.d_blockBegin, ctx.d_nGroupsInBlock, ctx.d_groups);
+                                                                          ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
+                                                                          ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
+                                                                          ctx.d_matchingPattIds, ctx.d_nMatches, i, ctx.d_blockBegin,
+                                                                          ctx.d_nGroupsInBlock, ctx.d_groups);
     }
     cudaDeviceSynchronize();
 
@@ -334,7 +334,7 @@ void runMatchByLayer(const PatternContainer& p, const EventContainer& e, GpuCont
         matchByLayer<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                            ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
                                                                            ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
-                                                                           ctx.d_matchingPattIds, ctx.d_nMatches, p.header.nGroups, p.header.nLayers, i);
+                                                                           ctx.d_matchingPattIds, ctx.d_nMatches, i);
     }
     cudaDeviceSynchronize();
 
@@ -417,7 +417,8 @@ void deleteGpuContext(GpuContext& ctx) {
 __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
                                    const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
                                    const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
-                                   int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
+                                   int *matchingPattIds, int *nMatches, const int eventId) {
+    const int nLayers = 8;
     const int nRequiredMatches = 7;
     const int nMaxRows = 22;
     int grp = blockIdx.x;
@@ -427,7 +428,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
 
     __shared__ unsigned int nHashMatches; // Number of group hashIds that match event collection hashIds
     __shared__ unsigned int nWildcards;
-    __shared__ int matchingCollections[8]; // Size should equal nLayers. Records which collection matches
+    __shared__ int matchingCollections[nLayers]; // Size should equal nLayers. Records which collection matches
                                            // the group hashId of a certain layer
 
     if (threadIdx.x == 0) {
@@ -555,15 +556,16 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
 __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
                                   const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
                                   const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
-                                  int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId,
-                                  const int *blockBegin, const int *nGroupsInBlock, const int *groups) {
+                                  int *matchingPattIds, int *nMatches, const int eventId, const int *blockBegin, const int *nGroupsInBlock,
+                                  const int *groups) {
 
+    const int nLayers = 8;
     const int maxGroupsInBlock = 60;
     const int nRequiredMatches = 7;
     const int nMaxRows = 22;
 
     __shared__ unsigned int nHashMatches[maxGroupsInBlock]; // Number of group hashIds that match event collection hashIds for each group
-    __shared__ int matchingCollections[8*maxGroupsInBlock]; // Size should equal nLayers*maxGroupsInBlock. Records which collection matches
+    __shared__ int matchingCollections[nLayers*maxGroupsInBlock]; // Size should equal nLayers*maxGroupsInBlock. Records which collection matches
                                                             // the group hashId of a certain layer
 
     // Initialise match counters
@@ -708,7 +710,8 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
 __global__ void matchByLayer(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
                              const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
                              const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
-                             int *matchingPattIds, int *nMatches, const int nGroups, const int nLayers, const int eventId) {
+                             int *matchingPattIds, int *nMatches, const int eventId) {
+    const int nLayers = 8;
     const int nRequiredMatches = 7;
     const int nMaxRows = 22;
     int grp = blockIdx.x;
