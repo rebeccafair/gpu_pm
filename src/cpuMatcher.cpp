@@ -17,7 +17,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
     unsigned char* hitDataCollBegin;
 
     int nRequiredMatches = 7;
-    int nMaxRows = 22;
+    int nMaxRows = 11;
     vector<int> nEventMatches(e.header.nEvents);
 
     auto t_begin = Clock::now();
@@ -93,6 +93,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
                                 int patt = ( lyr == 0 ) ? j : matchingPatterns[j];
                                 // Decode pattern data
                                 unsigned char dontCareBitmask = *(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) & 3;
+                                if (dontCareBitmask == 2) { dontCareBitmask = 3; }
                                 unsigned char pattHitPos = ((*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) >> 2) & 31);
 
                                 // Loop through hits in matching collections
@@ -181,7 +182,7 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
     unsigned char* hitDataCollBegin;
 
     int nRequiredMatches = 7;
-    int nMaxRows = 22;
+    int nMaxRows = 11;
     vector<int> nEventMatches(e.header.nEvents);
     //vector<int> matchingPattIds;
 
@@ -254,6 +255,7 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
                                 int patt = ( lyr == 0 ) ? j : matchingPatterns[j];
                                 // Decode pattern data
                                 unsigned char dontCareBitmask = *(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) & 3;
+                                if (dontCareBitmask == 2) { dontCareBitmask = 3; }
                                 unsigned char pattHitPos = ((*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr) >> 2) & 31);
 
                                 // Loop through hits in matching collections
