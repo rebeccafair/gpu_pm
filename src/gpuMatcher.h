@@ -47,8 +47,6 @@ vector<unsigned int> createBitArray(const PatternContainer& p, const EventContai
 
 void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups);
 
-void runMatchByLayer(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
-
 void deleteGpuContext(GpuContext& ctx);
 
 __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char *hitArray,
@@ -66,13 +64,6 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
                                   const unsigned int *hitDataEventIndices, int *matchingPattIds,
                                   int *nMatches, const int eventId, const int *blockBegin, const int *nGroupsInBlock,
                                   const int *groups);
-
-__global__ void matchByLayer(const int *hashId_array, const unsigned char *hitArray,
-                             const unsigned int *hitArrayGroupIndices, const int *hashId,
-                             const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                             const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                             const unsigned int *hitDataEventIndices, int *matchingPattIds,
-                             int *nMatches, const int eventId);
 
 #endif
 
