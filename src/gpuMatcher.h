@@ -21,6 +21,9 @@ struct GpuContext {
     unsigned int *d_nHitsEventIndices;
     unsigned char *d_hitData;
     unsigned int *d_hitDataEventIndices;
+    // Bit array inputs
+    short *d_hashIdToIndex;
+    unsigned int *d_bitArray;
 
     // Work distribution vars
     int *d_blockBegin;
@@ -38,6 +41,10 @@ void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, G
 
 void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock, int nBlocks);
 
+void patternHashIdToIndex(const PatternContainer& p, const int maxHashId, vector<short>& hashIdToIndex, int& nDetectorElemsInPatt);
+
+vector<unsigned int> createBitArray(const PatternContainer& p, const EventContainer& e, const vector<short>& hashIdToIndex, int nDetectorElemsInPatt, int eventId);
+
 void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups);
 
 void runMatchByLayer(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
@@ -48,7 +55,8 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
                                    const unsigned int *hitArrayGroupIndices, const int *hashId,
                                    const unsigned int *hashIdEventIndices, const unsigned int *nHits,
                                    const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                                   const unsigned int *hitDataEventIndices, int *matchingPattIds,
+                                   const unsigned int *hitDataEventIndices, const unsigned int *bitArray,
+                                   const short *hashIdToArray, int nDetectorElemsInPatt, int *matchingPattIds,
                                    int *nMatches, const int eventId);
 
 __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *hitArray,

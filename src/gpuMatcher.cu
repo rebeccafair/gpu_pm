@@ -130,13 +130,34 @@ void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, G
     // Calculate number of blocks required
     int blocksPerGrid = p.header.nGroups;
 
+    // Get detector elements that are in patterns
+    vector <short> hashIdToIndex;
+    int nDetectorElems = 0;
+    int maxHashId = 50000;
+    patternHashIdToIndex(p, maxHashId, hashIdToIndex, nDetectorElems);
+
+    // Allocate and copy information about pattern detector elements to device
+    size_t hashIdToIndex_size = sizeof(short)*hashIdToIndex.size();
+    err = cudaMalloc((void ** )&ctx.d_hashIdToIndex, hashIdToIndex_size);
+    if (err != cudaSuccess) cerr << "Error: device memory not successfully allocated for d_hashIdToIndex\n" << cudaGetErrorString(err) << endl;
+    err = cudaMemcpy(ctx.d_hashIdToIndex, &hashIdToIndex[0], hashIdToIndex_size, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) cerr << "Error: hashIdToIndex not copied to device\n" << cudaGetErrorString(err) << endl;
+    size_t bitArray_size = sizeof(unsigned int)*3*nDetectorElems;
+    err = cudaMalloc((void ** )&ctx.d_bitArray, bitArray_size);
+    if (err != cudaSuccess) cerr << "Error: device memory not successfully allocated for d_bitArray\n" << cudaGetErrorString(err) << endl;
+
     // Run kernel for each event
     int nPattMatchesSize = threadsPerBlock/p.header.nLayers*sizeof(unsigned int);
     for (int i = 0; i < e.header.nEvents; i++ ) {
-    //for (int i = 100; i < 125; i++ ) {
+        // Create bit array for this event and copy to device
+        vector<unsigned int> bitArray = createBitArray(p, e, hashIdToIndex, nDetectorElems, i);
+        err = cudaMemcpy(ctx.d_bitArray, &bitArray[0], bitArray_size, cudaMemcpyHostToDevice);
+        if (err != cudaSuccess) cerr << "Error: bitArray not copied to device\n" << cudaGetErrorString(err) << endl;
+
         matchByBlockSingle<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                                  ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
                                                                                  ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
+                                                                                 ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
                                                                                  ctx.d_matchingPattIds, ctx.d_nMatches, i);
     }
     cudaDeviceSynchronize();
@@ -234,6 +255,61 @@ void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, Gp
     if (err != cudaSuccess) cerr << "Error: d_matchingPattIds not copied from device to host" << endl;
 
 };
+
+void patternHashIdToIndex(const PatternContainer& p, const int maxHashId, vector<short>& hashIdToIndex, int& nDetectorElemsInPatt) {
+
+    hashIdToIndex.assign(maxHashId,-1);
+    nDetectorElemsInPatt = 0;
+
+    for (int grp = 0; grp < p.header.nGroups; grp++) {
+        for (int lyr = 0; lyr < p.header.nLayers; lyr++) {
+            int hashId = p.hashId_array[grp*p.header.nLayers + lyr];
+            if (hashId != -1 && hashIdToIndex[hashId] == -1) {
+               hashIdToIndex[hashId] = nDetectorElemsInPatt;
+               nDetectorElemsInPatt++;
+            }
+        }
+    }
+}
+
+vector<unsigned int> createBitArray(const PatternContainer& p, const EventContainer& e, const vector<short>& hashIdToIndex, int nDetectorElemsInPatt, int eventId) {
+
+    int nMaxRows = 11;
+    int maxDcBits = 2;
+    const unsigned char *pHitData = e.hitDataEventBegin[eventId];
+    vector<unsigned int> bitArray(nDetectorElemsInPatt*(maxDcBits + 1),0);
+
+    for (int coll = 0; coll < e.nCollections[eventId]; coll++) {
+        int hashId = *(e.hashIdEventBegin[eventId] + coll);
+        // Check if hashId for this collection is found in pattern set
+        if (hashIdToIndex[hashId] != -1) {
+
+            // Put hits into bit arrays
+            unsigned char isPixel = ((*pHitData >> 7) & 1); // If bit 7 is 1, element is pixel, otherwise strip
+            for (int hit = 0; hit < *(e.nHitsEventBegin[eventId] + coll); hit++) {
+                unsigned char hitPos = ((*(pHitData + hit) >> 2) & 31); // Get superstrip value if strip, or row value if pixel. Occupies bits 2-6
+
+                for (int dcBits = 0; dcBits <= maxDcBits; dcBits++) {
+                    unsigned char maskedHitPos = hitPos &  (~((1 << dcBits) - 1)); // Mask hit value depending on dc bits. e.g. if dcBits = 2 AND with 11100
+                    if (isPixel) {
+                        maskedHitPos += (*(pHitData + hit) & 3)*nMaxRows; // If pixel, need to adjust value according to column
+                    }
+                    unsigned char bitMask = 1; // Get bitmask  e.g. ...01111 for dcBits = 2
+                    if (dcBits == 1) {
+                        bitMask = 3;
+                    } else if (dcBits == 2) {
+                        bitMask = 15;
+                    }
+                    bitArray[dcBits*nDetectorElemsInPatt + hashIdToIndex[hashId]] |= (bitMask << maskedHitPos);
+                }
+            } // End loop over hits
+
+        }
+        pHitData += *(e.nHitsEventBegin[eventId] + coll); // Update pointer to hit data
+    } // End loop over collections
+
+    return bitArray;
+}
 
 void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups) {
 
@@ -417,94 +493,38 @@ void deleteGpuContext(GpuContext& ctx) {
 __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
                                    const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
                                    const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
+                                   const unsigned int *bitArray, const short *hashIdToIndex, const int nDetectorElemsInPatt,
                                    int *matchingPattIds, int *nMatches, const int eventId) {
     const int nLayers = 8;
     const int nRequiredMatches = 7;
     const int nMaxRows = 11;
-    const int nMaxColumns = 3;
-    const int maxDcBits = 2;
     int grp = blockIdx.x;
     int lyr = threadIdx.x%nLayers;
     int row = threadIdx.x/nLayers;
     int lyrHashId = hashId_array[grp*nLayers + lyr];
 
     __shared__ unsigned int nHashMatches; // Number of group hashIds that match event collection hashIds
-    __shared__ int matchingCollections[nLayers]; // Records which collection matches the group hashId of a certain layer
-    __shared__ unsigned int collectionHit[(maxDcBits + 1)*nLayers]; // Records hits as a bit array for a matching collection
 
     if (threadIdx.x == 0) {
         nHashMatches = 0;
     }
     __syncthreads();
 
-    // Get first nLayers threads to check if any hashIds are wildcards
+    // Get first nLayers threads to check if there are enough matches in the group
+    // if bit array > 0 there are hits for that detector element for this event
     if (threadIdx.x < nLayers) {
-        // Initialise matchingCollections to -1
-        matchingCollections[lyr] = -1;
-        // Automatically match if layer is wildcard
-        if (lyrHashId == -1) {
+        if (lyrHashId == -1 || bitArray[hashIdToIndex[lyrHashId]] > 0) {
             atomicAdd(&nHashMatches,1);
          }
     }
 
-    // Get each thread to compare one hashId with one collection from
-    // an event to check for a match
-    int nColl = hashIdEventIndices[eventId+1] - hashIdEventIndices[eventId];
-    int nLoops = ((nLayers*nColl)/blockDim.x) + 1;
-    for (int n = 0; n < nLoops; n++) {
-        int coll = n*blockDim.x/nLayers + threadIdx.x/nLayers;
-        if (coll < nColl) {
-            if (lyrHashId != -1) {
-                if (hashId[hashIdEventIndices[eventId] + coll] == lyrHashId) {
-                    atomicExch(&matchingCollections[lyr],coll);
-                    atomicAdd(&nHashMatches,1);
-                }
-            }
-        }
-    }
     __syncthreads();
 
     if (nHashMatches >= nRequiredMatches) {
 
-        // Initialise collectionHit[]
-        if (threadIdx.x < nLayers*(maxDcBits + 1)) {
-            collectionHit[threadIdx.x] = 0;
-        }
-        __syncthreads();
-
-        // Loop through collection hits to find collection hit data
-        int matchingColl = matchingCollections[lyr];
-        const unsigned char *pHitData = &hitData[hitDataEventIndices[eventId]];
-        for (int coll = 0; coll < matchingColl; coll++) {
-            pHitData += nHits[nHitsEventIndices[eventId] + coll];
-        }
-
-        // Put hits into bit arrays
-        unsigned char isPixel = ((*pHitData >> 7) & 1); // If bit 7 is 1, element is pixel, otherwise strip
-        if (threadIdx.x < nLayers) {
-            if (matchingColl != -1) {
-                for (int hit = 0; hit < nHits[nHitsEventIndices[eventId] + matchingColl]; hit++) {
-                    unsigned char hitPos = ((*(pHitData + hit) >> 2) & 31); // Get superstrip value if strip, or row value if pixel. Occupies bits 2-6
-                    for (int dcBits = 0; dcBits <= maxDcBits; dcBits++) {
-                        unsigned char maskedHitPos = hitPos &  (~((1 << dcBits) - 1)); // Mask hit value depending on dc bits. e.g. if dcBits = 2 AND with 11100
-                        if (isPixel) { 
-                            maskedHitPos += (*(pHitData + hit) & 3)*nMaxRows; // If pixel, need to adjust value according to column
-                        }
-                        unsigned char bitMask = 1; // Get bitmask  e.g. ...01111 for dcBits = 2
-                        if (dcBits == 1) {
-                            bitMask = 3;
-                        } else if (dcBits == 2) {
-                            bitMask = 15;
-                        }
-                        collectionHit[dcBits*nLayers + lyr] |= (bitMask << maskedHitPos); 
-                    }
-                }
-            }
-        }
-
         // Loop as many times as necessary for all threads to cover all patterns
         int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
-        nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
+        int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
         extern __shared__ unsigned int nPattMatches[];
 
         for (int n = 0; n < nLoops; n++) {
@@ -520,10 +540,14 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
             // Only continue if thread isn't overflowing the number of patterns in the group
             if ( pattNum < nPattInGrp) {
 
-                if (matchingColl != -1) {
-
+                // Check for wildcard
+                if (lyrHashId == -1) {
+                    atomicAdd(&nPattMatches[row],1);
+                // Else check if this event has a collection with the right hashId 
+                } else if (hashIdToIndex[lyrHashId] != -1) {
                     // Get pattern hit data
                     unsigned char pattHit = hitArray[hitArrayGroupIndices[grp] + n*blockDim.x + threadIdx.x];
+                    unsigned char isPixel = ((pattHit >> 7) & 1);
                     unsigned char hitPos = ((pattHit >> 2) & 31); // Get superstrip position if strip, or row if pixel. Occupies bits 2-6
                     unsigned char dcBits = (pattHit & 3);
                     if (dcBits == 3) { dcBits = 2; }
@@ -532,12 +556,10 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
                         unsigned char pattPixRow = hitPos%nMaxRows;
                         hitPos = nMaxRows*pattPixCol + pattPixRow;
                     }
-                    if ( ((1 << hitPos) & collectionHit[dcBits*nLayers + lyr]) > 0 ) {
+                    if ( ((1 << hitPos) & bitArray[dcBits*nDetectorElemsInPatt + hashIdToIndex[lyrHashId]]) > 0 ) {
                         atomicAdd(&nPattMatches[row],1);
                     }
 
-                } else if ( lyrHashId == -1 ) {
-                    atomicAdd(&nPattMatches[row],1);
                 }
 
                 __syncthreads();
