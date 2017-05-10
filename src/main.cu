@@ -48,14 +48,14 @@ int main(int argc, char* argv[]) {
     GpuContext ctx1;
     MatchResults gpuResults1;
     createGpuContext(p, e, ctx1);
-    runMatchByBlockMulti(p, e, ctx1, gpuResults1, 128, 1000);
+    runGpuMatching(p, e, ctx1, gpuResults1, 128, 1000);
     deleteGpuContext(ctx1);
 
     // Perform gpu setup and pattern matching by pattern block
     GpuContext ctx2;
     MatchResults gpuResults2;
     createGpuContext(p, e, ctx2);
-    runMatchByBlockSingle(p, e, ctx2, gpuResults2, 64);
+    runGpuMatching(p, e, ctx2, gpuResults2, 64);
     deleteGpuContext(ctx2);
 
     // Compare cpu/gpu results

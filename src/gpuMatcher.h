@@ -13,15 +13,6 @@ struct GpuContext {
     unsigned char *d_hitArray;
     unsigned int *d_hitArrayGroupIndices;
 
-    // Event vars
-    unsigned int *d_nCollections;
-    int *d_hashId;
-    unsigned int *d_hashIdEventIndices;
-    unsigned int *d_nHits;
-    unsigned int *d_nHitsEventIndices;
-    unsigned char *d_hitData;
-    unsigned int *d_hitDataEventIndices;
-
     // Bit array inputs
     short *d_hashIdToIndex;
     unsigned int *d_bitArray;
@@ -38,9 +29,7 @@ struct GpuContext {
 
 void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuContext& ctx);
 
-void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock);
-
-void runMatchByBlockMulti(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock, int nBlocks);
+void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock, int nBlocks = 0);
 
 void patternHashIdToIndex(const PatternContainer& p, const int maxHashId, vector<short>& hashIdToIndex, int& nDetectorElemsInPatt);
 
