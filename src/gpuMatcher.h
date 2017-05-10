@@ -56,10 +56,8 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
                                    int *nMatches, const int eventId);
 
 __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *hitArray,
-                                  const unsigned int *hitArrayGroupIndices, const int *hashId,
-                                  const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                                  const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                                  const unsigned int *hitDataEventIndices, int *matchingPattIds,
+                                  const unsigned int *hitArrayGroupIndices, const unsigned int *bitArray, 
+                                  const short *hashIdToIndex, const int nDetectorElemsInPatt, int *matchingPattIds,
                                   int *nMatches, const int eventId, const int *blockBegin, const int *nGroupsInBlock,
                                   const int *groups);
 
