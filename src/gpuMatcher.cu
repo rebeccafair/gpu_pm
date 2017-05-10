@@ -92,6 +92,22 @@ void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuCon
     err = cudaMemcpy(ctx.d_hitDataEventIndices, &h_hitDataEventIndices[0], hitDataEventIndices_size, cudaMemcpyHostToDevice);
     if (err != cudaSuccess) cerr << "Error: hitDataEventIndices not copied to device\n" << cudaGetErrorString(err) << endl;
 
+    // Get detector elements that are in patterns (used for creating bit arrays)
+    vector <short> hashIdToIndex;
+    int nDetectorElems = 0;
+    int maxHashId = 50000;
+    patternHashIdToIndex(p, maxHashId, hashIdToIndex, nDetectorElems);
+
+    // Allocate and copy information about pattern detector elements to device
+    size_t hashIdToIndex_size = sizeof(short)*hashIdToIndex.size();
+    err = cudaMalloc((void ** )&ctx.d_hashIdToIndex, hashIdToIndex_size);
+    if (err != cudaSuccess) cerr << "Error: device memory not successfully allocated for d_hashIdToIndex\n" << cudaGetErrorString(err) << endl;
+    err = cudaMemcpy(ctx.d_hashIdToIndex, &hashIdToIndex[0], hashIdToIndex_size, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) cerr << "Error: hashIdToIndex not copied to device\n" << cudaGetErrorString(err) << endl;
+    size_t bitArray_size = sizeof(unsigned int)*3*nDetectorElems;
+    err = cudaMalloc((void ** )&ctx.d_bitArray, bitArray_size);
+    if (err != cudaSuccess) cerr << "Error: device memory not successfully allocated for d_bitArray\n" << cudaGetErrorString(err) << endl;
+
     // Initialise output arrays
     err = cudaMemset(ctx.d_matchingPattIds, 0, matchingPattIds_size);
     if (err != cudaSuccess) cerr << "Error: d_matchingPattIds not initialised to zero" << endl;
@@ -115,6 +131,12 @@ void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuCon
 void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock) {
     cudaError_t err = cudaSuccess;
 
+    // Get nDetectorElems
+    vector <short> hashIdToIndex;
+    int nDetectorElems = 0;
+    int maxHashId = 50000;
+    patternHashIdToIndex(p, maxHashId, hashIdToIndex, nDetectorElems);
+
     // Create timer events
     cudaEvent_t start;
     err = cudaEventCreate(&start);
@@ -130,33 +152,14 @@ void runMatchByBlockSingle(const PatternContainer& p, const EventContainer& e, G
     // Calculate number of blocks required
     int blocksPerGrid = p.header.nGroups;
 
-    // Get detector elements that are in patterns
-    vector <short> hashIdToIndex;
-    int nDetectorElems = 0;
-    int maxHashId = 50000;
-    patternHashIdToIndex(p, maxHashId, hashIdToIndex, nDetectorElems);
-
-    // Allocate and copy information about pattern detector elements to device
-    size_t hashIdToIndex_size = sizeof(short)*hashIdToIndex.size();
-    err = cudaMalloc((void ** )&ctx.d_hashIdToIndex, hashIdToIndex_size);
-    if (err != cudaSuccess) cerr << "Error: device memory not successfully allocated for d_hashIdToIndex\n" << cudaGetErrorString(err) << endl;
-    err = cudaMemcpy(ctx.d_hashIdToIndex, &hashIdToIndex[0], hashIdToIndex_size, cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) cerr << "Error: hashIdToIndex not copied to device\n" << cudaGetErrorString(err) << endl;
-    size_t bitArray_size = sizeof(unsigned int)*3*nDetectorElems;
-    err = cudaMalloc((void ** )&ctx.d_bitArray, bitArray_size);
-    if (err != cudaSuccess) cerr << "Error: device memory not successfully allocated for d_bitArray\n" << cudaGetErrorString(err) << endl;
-
-    // Run kernel for each event
+    // Create bit array and run kernel for each event
     int nPattMatchesSize = threadsPerBlock/p.header.nLayers*sizeof(unsigned int);
     for (int i = 0; i < e.header.nEvents; i++ ) {
-        // Create bit array for this event and copy to device
         vector<unsigned int> bitArray = createBitArray(p, e, hashIdToIndex, nDetectorElems, i);
-        err = cudaMemcpy(ctx.d_bitArray, &bitArray[0], bitArray_size, cudaMemcpyHostToDevice);
+        err = cudaMemcpy(ctx.d_bitArray, &bitArray[0], sizeof(unsigned int)*bitArray.size(), cudaMemcpyHostToDevice);
         if (err != cudaSuccess) cerr << "Error: bitArray not copied to device\n" << cudaGetErrorString(err) << endl;
 
         matchByBlockSingle<<<blocksPerGrid, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
-                                                                                 ctx.d_hashId, ctx.d_hashIdEventIndices, ctx.d_nHits,
-                                                                                 ctx.d_nHitsEventIndices, ctx.d_hitData, ctx.d_hitDataEventIndices,
                                                                                  ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
                                                                                  ctx.d_matchingPattIds, ctx.d_nMatches, i);
     }
@@ -441,8 +444,6 @@ void deleteGpuContext(GpuContext& ctx) {
 };
 
 __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char *hitArray, const unsigned int *hitArrayGroupIndices, 
-                                   const int *hashId, const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                                   const unsigned int *nHitsEventIndices, const unsigned char *hitData, const unsigned int *hitDataEventIndices, 
                                    const unsigned int *bitArray, const short *hashIdToIndex, const int nDetectorElemsInPatt,
                                    int *matchingPattIds, int *nMatches, const int eventId) {
     const int nLayers = 8;

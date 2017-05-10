@@ -21,6 +21,7 @@ struct GpuContext {
     unsigned int *d_nHitsEventIndices;
     unsigned char *d_hitData;
     unsigned int *d_hitDataEventIndices;
+
     // Bit array inputs
     short *d_hashIdToIndex;
     unsigned int *d_bitArray;
@@ -50,10 +51,7 @@ void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBe
 void deleteGpuContext(GpuContext& ctx);
 
 __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char *hitArray,
-                                   const unsigned int *hitArrayGroupIndices, const int *hashId,
-                                   const unsigned int *hashIdEventIndices, const unsigned int *nHits,
-                                   const unsigned int *nHitsEventIndices, const unsigned char *hitData,
-                                   const unsigned int *hitDataEventIndices, const unsigned int *bitArray,
+                                   const unsigned int *hitArrayGroupIndices, const unsigned int *bitArray,
                                    const short *hashIdToArray, int nDetectorElemsInPatt, int *matchingPattIds,
                                    int *nMatches, const int eventId);
 
