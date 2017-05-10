@@ -102,9 +102,9 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
             }
         }
 
-        /*cout << "Matching groups for event " << event + 1 << ": ";
+        /*cout << "Matching groups for event " << event << ": ";
         for (int i = 0; i < matchingGroups.size(); i++) {
-            cout << matchingGroups[i] + 1 << " ";
+            cout << matchingGroups[i] << " ";
         }
         cout << endl;*/
 
@@ -158,7 +158,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
             // Get total number of matches for this event
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
-                    //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << endl;
+                    //cout << "Match found, event: " << event << " grp: " << grp << " patt: " << patt << endl;
                     mr.patternIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
@@ -170,7 +170,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
 
     mr.nMatches = 0;
     for (int event = 0; event < e.header.nEvents; event++) {
-        /*cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
+        /*cout << "Matching patterns for event " << event << ": " << nEventMatches[event] << endl;
         if (nEventMatches[event] > 0) {
             cout << "Matching pattern ids:";
             for (int patt = 0; patt < nEventMatches[event]; patt++) {
@@ -227,9 +227,9 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
             }
         } // End loop through events
 
-        //cout << "Matching events for group " << grp + 1 << ": ";
+        //cout << "Matching events for group " << grp << ": ";
         //for (int i = 0; i < matchingEvents.size(); i++) {
-        //    cout << matchingEvents[i] + 1<< " ";
+        //    cout << matchingEvents[i] << " ";
         //}
         //cout << endl;
 
@@ -278,8 +278,8 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
                                             unsigned char eventPixRow = (((eventHitPos[hit] >> 2) & 31) | dontCareBitmask);
                                             unsigned char pattPixRow = (pattHitPos%nMaxRows | dontCareBitmask);
                                             if ( eventPixRow == pattPixRow ) {
-                                            //cout << "Match found for event " << event + 1 << " grp " << grp + 1 <<
-                                            //        " hashId " << *(e.hashIdEventBegin[event] + coll) << " grp " << grp + 1 << " patt " << patt + 1 << " pattHit: "
+                                            //cout << "Match found for event " << event << " grp " << grp <<
+                                            //        " hashId " << *(e.hashIdEventBegin[event] + coll) << " grp " << grp << " patt " << patt << " pattHit: "
                                             //     << bitset<8>(*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr))
                                             //     << " collHit: " << bitset<8>(*(hitDataCollBegin + hit)) << " nMatches: " << nMatches[patt] << endl;
                                                 nMatches[patt]++;
@@ -292,8 +292,8 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
                                         unsigned char eventSuperstrip = (((eventHitPos[hit] >> 2) & 31) | dontCareBitmask);
                                         unsigned char pattSuperstrip = (pattHitPos | dontCareBitmask);
                                         if ( eventSuperstrip == pattSuperstrip ) {
-                                            //cout << "Match found for event " << event + 1 << " grp " << grp + 1 <<
-                                            //        " hashId " << *(e.hashIdEventBegin[event] + coll) << " grp " << grp + 1 << " patt " << patt + 1 << " pattHit: "
+                                            //cout << "Match found for event " << event << " grp " << grp <<
+                                            //        " hashId " << *(e.hashIdEventBegin[event] + coll) << " grp " << grp << " patt " << patt << " pattHit: "
                                             //     << bitset<8>(*(p.hitArrayGroupBegin[grp] + p.header.nLayers*patt + lyr))
                                             //     << " collHit: " << bitset<8>(*(hitDataCollBegin + hit)) << " nMatches: " << nMatches[patt] << endl;
                                             nMatches[patt]++;
@@ -321,7 +321,7 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
             // Get total number of matches for this event
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
-                    //cout << "Match found, event: " << event + 1 << " grp: " << grp + 1 << " patt: " << patt + 1 << " pattId: " << ((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt << endl;
+                    //cout << "Match found, event: " << event << " grp: " << grp << " patt: " << patt << " pattId: " << ((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt << endl;
                     mr.patternIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
@@ -334,7 +334,7 @@ void matchByPatterns(const PatternContainer& p, const EventContainer& e, MatchRe
 
     mr.nMatches = 0;
     for (int event = 0; event < e.header.nEvents; event++) {
-        /*cout << "Matching patterns for event " << event + 1 << ": " << nEventMatches[event] << endl;
+        /*cout << "Matching patterns for event " << event << ": " << nEventMatches[event] << endl;
         if (nEventMatches[event] > 0) {
             //cout << "Matching pattern ids:";
             for (int patt = 0; patt < nEventMatches[event]; patt++) {
