@@ -276,6 +276,8 @@ vector<unsigned int> createBitArray(const PatternContainer& p, const EventContai
 
     int nMaxRows = 11;
     int maxDcBits = 2;
+    int columnOffset = 4; // When encoding pixel into bitArray, need to offset columns so that
+                          // only hits in the same column will match.
     const unsigned char *pHitData = e.hitDataEventBegin[eventId];
     vector<unsigned int> bitArray(nDetectorElemsInPatt*(maxDcBits + 1),0);
 
@@ -292,7 +294,7 @@ vector<unsigned int> createBitArray(const PatternContainer& p, const EventContai
                 for (int dcBits = 0; dcBits <= maxDcBits; dcBits++) {
                     unsigned char maskedHitPos = hitPos &  (~((1 << dcBits) - 1)); // Mask hit value depending on dc bits. e.g. if dcBits = 2 AND with 11100
                     if (isPixel) {
-                        maskedHitPos += (*(pHitData + hit) & 3)*nMaxRows; // If pixel, need to adjust value according to column
+                        maskedHitPos += (*(pHitData + hit) & 3)*(nMaxRows + columnOffset); // If pixel, need to adjust value according to column
                     }
                     unsigned char bitMask = 1; // Get bitmask  e.g. ...01111 for dcBits = 2
                     if (dcBits == 1) {
@@ -446,6 +448,9 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
     const int nLayers = 8;
     const int nRequiredMatches = 7;
     const int nMaxRows = 11;
+    int columnOffset = 4; // When encoding pixel into bitArray, need to offset columns so that
+                          // only hits in the same column will match.
+
     int grp = blockIdx.x;
     int lyr = threadIdx.x%nLayers;
     int row = threadIdx.x/nLayers;
@@ -502,7 +507,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
                     if (isPixel) {
                         unsigned char pattPixCol = hitPos/nMaxRows;
                         unsigned char pattPixRow = hitPos%nMaxRows;
-                        hitPos = nMaxRows*pattPixCol + pattPixRow;
+                        hitPos = (nMaxRows + columnOffset)*pattPixCol + pattPixRow;
                     }
                     if ( ((1 << hitPos) & bitArray[dcBits*nDetectorElemsInPatt + hashIdToIndex[lyrHashId]]) > 0 ) {
                         atomicAdd(&nPattMatches[row],1);
