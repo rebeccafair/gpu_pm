@@ -127,61 +127,104 @@ void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuConte
     int maxHashId = 50000;
     patternHashIdToIndex(p, maxHashId, hashIdToIndex, nDetectorElems);
 
-    // Create timer events
-    cudaEvent_t start;
-    err = cudaEventCreate(&start);
-    if (err != cudaSuccess) cerr << "Error: failed to create timer start event\n" << cudaGetErrorString(err) << endl;
-    cudaEvent_t stop;
-    err = cudaEventCreate(&stop);
-    if (err != cudaSuccess) cerr << "Error: failed to create timer stop event\n" << cudaGetErrorString(err) << endl;
+    // Create events for timing bit array creation and kernel
+    cudaEvent_t kernelStart, bitStart;
+    err = cudaEventCreate(&kernelStart);
+    err = cudaEventCreate(&bitStart);
+    if (err != cudaSuccess) cerr << "Error: failed to create timer start events\n" << cudaGetErrorString(err) << endl;
+    cudaEvent_t kernelStop, bitStop;
+    err = cudaEventCreate(&kernelStop);
+    err = cudaEventCreate(&bitStop);
+    if (err != cudaSuccess) cerr << "Error: failed to create timer stop events\n" << cudaGetErrorString(err) << endl;
 
-    // Record timer start event
-    err = cudaEventRecord(start, NULL);
-    if (err != cudaSuccess) cerr << "Error: failed to record timer start event\n" << cudaGetErrorString(err) << endl;
+    // Total timers
+    float kernelTotal = 0.0f;
+    float bitArrTotal = 0.0f;
 
     // Calculate bit arrays and run kernel for each event
     int nPattMatchesSize = threadsPerBlock/p.header.nLayers*sizeof(unsigned int);
     if (nBlocks) {
         for (int i = 0; i < e.header.nEvents; i++ ) {
+
+            // Calculate bit array and record timers
+            err = cudaEventRecord(bitStart, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record bit start event\n" << cudaGetErrorString(err) << endl;
             vector<unsigned int> bitArray = createBitArray(p, e, hashIdToIndex, nDetectorElems, i);
             err = cudaMemcpy(ctx.d_bitArray, &bitArray[0], sizeof(unsigned int)*bitArray.size(), cudaMemcpyHostToDevice);
             if (err != cudaSuccess) cerr << "Error: bitArray not copied to device\n" << cudaGetErrorString(err) << endl;
+            err = cudaEventRecord(bitStop, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record bit stop event\n" << cudaGetErrorString(err) << endl;
 
+            // Run kernel to calculate matches and record timers
+            err = cudaEventRecord(kernelStart, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record kernel start event\n" << cudaGetErrorString(err) << endl;
             matchByBlockMulti<<<nBlocks, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                               ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
                                                                               ctx.d_matchingPattIds, ctx.d_nMatches, i, ctx.d_blockBegin,
                                                                               ctx.d_nGroupsInBlock, ctx.d_groups);
+            err = cudaEventRecord(kernelStop, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record kernel stop event\n" << cudaGetErrorString(err) << endl;
+            err = cudaEventSynchronize(kernelStop);
+            if (err != cudaSuccess) cerr << "Error: failed to synchronize on stop event\n" << cudaGetErrorString(err) << endl;
+
+            // Calculate elapsed time
+            float bitArrTime = 0.0f;
+            float kernelTime = 0.0f;
+            err = cudaEventElapsedTime(&bitArrTime, bitStart, bitStop);
+            if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
+            bitArrTotal += bitArrTime;
+            err = cudaEventElapsedTime(&kernelTime, kernelStart, kernelStop);
+            if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
+            kernelTotal += kernelTime;
+
         }
     } else {
         for (int i = 0; i < e.header.nEvents; i++ ) {
+
+            // Calculate bit array and record timers
+            err = cudaEventRecord(bitStart, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record bit start event\n" << cudaGetErrorString(err) << endl;
             vector<unsigned int> bitArray = createBitArray(p, e, hashIdToIndex, nDetectorElems, i);
             err = cudaMemcpy(ctx.d_bitArray, &bitArray[0], sizeof(unsigned int)*bitArray.size(), cudaMemcpyHostToDevice);
             if (err != cudaSuccess) cerr << "Error: bitArray not copied to device\n" << cudaGetErrorString(err) << endl;
+            err = cudaEventRecord(bitStop, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record bit stop event\n" << cudaGetErrorString(err) << endl;
 
+            // Run kernel to calculate matches and record timers
+            err = cudaEventRecord(kernelStart, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record kernel start event\n" << cudaGetErrorString(err) << endl;
             matchByBlockSingle<<<p.header.nGroups, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                                      ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
                                                                                      ctx.d_matchingPattIds, ctx.d_nMatches, i);
+            err = cudaEventRecord(kernelStop, 0);
+            if (err != cudaSuccess) cerr << "Error: failed to record kernel stop event\n" << cudaGetErrorString(err) << endl;
+            err = cudaEventSynchronize(kernelStop);
+            if (err != cudaSuccess) cerr << "Error: failed to synchronize on stop event\n" << cudaGetErrorString(err) << endl;
+
+            // Calculate elapsed time
+            float bitArrTime = 0.0f;
+            float kernelTime = 0.0f;
+            err = cudaEventElapsedTime(&bitArrTime, bitStart, bitStop);
+            if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
+            bitArrTotal += bitArrTime;
+            err = cudaEventElapsedTime(&kernelTime, kernelStart, kernelStop);
+            if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
+            kernelTotal += kernelTime;
         }
 
     }
     cudaDeviceSynchronize();
 
-    // Record timer stop event
-    err = cudaEventRecord(stop, NULL);
-    if (err != cudaSuccess) cerr << "Error: failed to record timer stop event\n" << cudaGetErrorString(err) << endl;
-    err = cudaEventSynchronize(stop);
-    if (err != cudaSuccess) cerr << "Error: failed to synchronize on stop event\n" << cudaGetErrorString(err) << endl;
-
-    // Calculate elapsed time
-    float msecTotal = 0.0f;
-    err = cudaEventElapsedTime(&msecTotal, start, stop);
-    if (err != cudaSuccess) cerr << "Error: failed to get elapsed time between events\n" << cudaGetErrorString(err) << endl;
-    cout << "Ran kernel " << e.header.nEvents << " times in " << msecTotal << " ms" << endl;
-    float msecPerEvent = msecTotal/e.header.nEvents;
+    // Calculate and output time per event
+    cout << "Ran kernel " << e.header.nEvents << " times in " << kernelTotal << " ms" << endl;
+    cout << "Created bit arrays " << e.header.nEvents << " times in " << bitArrTotal << " ms" << endl;
+    float msecPerEvent = kernelTotal/e.header.nEvents;
     if (nBlocks) {
         cout << "Average GPU matching kernel time with " << threadsPerBlock << " threads and " << nBlocks << " blocks is " << msecPerEvent << " ms" << endl;
+        cout << "Average bit array creation time is " << bitArrTotal/e.header.nEvents << " ms" << endl;
     } else {
         cout << "Average GPU matching kernel time with " << threadsPerBlock << " threads is " << msecPerEvent << " ms" << endl;
+        cout << "Average bit array creation time is " << bitArrTotal/e.header.nEvents << " ms" << endl;
     }
 
     // Copy result back to host memory
