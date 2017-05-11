@@ -96,12 +96,13 @@ void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuCon
 void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuContext& ctx, MatchResults& mr, int threadsPerBlock, int nBlocks) {
     cudaError_t err = cudaSuccess;
 
+    int maxNGroupsInBlock = 0;
     if (nBlocks) {
         // Distribute groups to blocks according to number of blocks
         vector<int> blockBegin(nBlocks,-1);
         vector<int> nGroupsInBlock(nBlocks,0);
         vector<int> groups(p.header.nGroups,-1);
-        distributeWork(nBlocks, p, blockBegin, nGroupsInBlock, groups);
+        distributeWork(nBlocks, p, blockBegin, nGroupsInBlock, groups, maxNGroupsInBlock);
 
         // Allocate and copy information about block/group assignments to device
         size_t blockBegin_size = sizeof(int)*blockBegin.size();
@@ -142,7 +143,6 @@ void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuConte
     float bitArrTotal = 0.0f;
 
     // Calculate bit arrays and run kernel for each event
-    int nPattMatchesSize = threadsPerBlock/p.header.nLayers*sizeof(unsigned int);
     if (nBlocks) {
         for (int i = 0; i < e.header.nEvents; i++ ) {
 
@@ -158,7 +158,7 @@ void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuConte
             // Run kernel to calculate matches and record timers
             err = cudaEventRecord(kernelStart, 0);
             if (err != cudaSuccess) cerr << "Error: failed to record kernel start event\n" << cudaGetErrorString(err) << endl;
-            matchByBlockMulti<<<nBlocks, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
+            matchByBlockMulti<<<nBlocks, threadsPerBlock, maxNGroupsInBlock*sizeof(unsigned int)>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                               ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
                                                                               ctx.d_matchingPattIds, ctx.d_nMatches, i, ctx.d_blockBegin,
                                                                               ctx.d_nGroupsInBlock, ctx.d_groups);
@@ -193,7 +193,7 @@ void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuConte
             // Run kernel to calculate matches and record timers
             err = cudaEventRecord(kernelStart, 0);
             if (err != cudaSuccess) cerr << "Error: failed to record kernel start event\n" << cudaGetErrorString(err) << endl;
-            matchByBlockSingle<<<p.header.nGroups, threadsPerBlock, nPattMatchesSize>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
+            matchByBlockSingle<<<p.header.nGroups, threadsPerBlock>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
                                                                                      ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
                                                                                      ctx.d_matchingPattIds, ctx.d_nMatches, i);
             err = cudaEventRecord(kernelStop, 0);
@@ -293,11 +293,11 @@ vector<unsigned int> createBitArray(const PatternContainer& p, const EventContai
     return bitArray;
 }
 
-void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups) {
+void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups, int& maxNGroupsInBlock) {
 
     int maxPattsInBlock = (p.header.nHitPatt + nBlocks - 1)/nBlocks;
 
-    cout << "Distributing work..." << endl;
+    //cout << "Distributing work..." << endl;
 
     vector<int> nPattsInBlock(nBlocks,0);
     vector<int> assignedBlock(p.header.nGroups,-1);
@@ -343,6 +343,7 @@ void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBe
     for (int b = 0; b < nBlocks; b++) {
         blockBegin[b] = nextIndex;
         nextIndex += nGroupsInBlock[b];
+        if (nGroupsInBlock[b] > maxNGroupsInBlock) { maxNGroupsInBlock = nGroupsInBlock[b]; }
         nGroupsInBlock[b] = 0;
     }
 
@@ -363,8 +364,7 @@ void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBe
             cout << groups[blockBegin[b] + g] << " ";
         }
         cout << endl;
-    }
-    */
+    }*/
 
 };
 
@@ -456,7 +456,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
         // Loop as many times as necessary for all threads to cover all patterns
         int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
         int nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
-        extern __shared__ unsigned int nPattMatches[];
+        __shared__ unsigned int nPattMatches[128]; // Max size of patt matches = maxNThreads/nLayers = 1024/8
 
         for (int n = 0; n < nLoops; n++) {
 
@@ -517,14 +517,12 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
                                   const int *groups) {
 
     const int nLayers = 8;
-    const int maxGroupsInBlock = 60;
     const int nRequiredMatches = 7;
     const int nMaxRows = 11;
     int columnOffset = 4; // When encoding pixel into bitArray, need to offset columns so that
                           // only hits in the same column will match.
 
-
-    __shared__ unsigned int nHashMatches[maxGroupsInBlock]; // Number of group hashIds that match event collection hashIds for each group
+    extern __shared__ unsigned int nHashMatches[]; // Number of group hashIds that match event collection hashIds for each group
 
     // Initialise match counters
     if (threadIdx.x < nGroupsInBlock[blockIdx.x]) {
@@ -561,7 +559,7 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
             // Loop as many times as necessary for all threads to cover all patterns
             int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
             nLoops = ((nPattInGrp*nLayers)/blockDim.x) + 1;
-            extern __shared__ unsigned int nPattMatches[];
+            __shared__ unsigned int nPattMatches[128]; // Max size of patt matches = maxNThreads/nLayers = 1024/8
 
             for (int n = 0; n < nLoops; n++) {
 

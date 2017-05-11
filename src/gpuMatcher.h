@@ -35,7 +35,7 @@ void patternHashIdToIndex(const PatternContainer& p, const int maxHashId, vector
 
 vector<unsigned int> createBitArray(const PatternContainer& p, const EventContainer& e, const vector<short>& hashIdToIndex, int nDetectorElemsInPatt, int eventId);
 
-void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups);
+void distributeWork(int nBlocks, const PatternContainer& p, vector<int>& blockBegin, vector<int>& nGroupsInBlock, vector<int>& groups, int& nMaxGroupsInBlock);
 
 void deleteGpuContext(GpuContext& ctx);
 
