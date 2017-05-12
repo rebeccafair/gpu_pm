@@ -158,10 +158,10 @@ void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuConte
             // Run kernel to calculate matches and record timers
             err = cudaEventRecord(kernelStart, 0);
             if (err != cudaSuccess) cerr << "Error: failed to record kernel start event\n" << cudaGetErrorString(err) << endl;
-            matchByBlockMulti<<<nBlocks, threadsPerBlock, maxNGroupsInBlock*sizeof(unsigned int)>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
-                                                                              ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
-                                                                              ctx.d_matchingPattIds, ctx.d_nMatches, i, ctx.d_blockBegin,
-                                                                              ctx.d_nGroupsInBlock, ctx.d_groups);
+            matchByBlockMulti<<<nBlocks, threadsPerBlock>>>(ctx.d_hashId_array, ctx.d_hitArray, ctx.d_hitArrayGroupIndices,
+                                                            ctx.d_bitArray, ctx.d_hashIdToIndex, nDetectorElems,
+                                                            ctx.d_matchingPattIds, ctx.d_nMatches, i, ctx.d_blockBegin,
+                                                            ctx.d_nGroupsInBlock, ctx.d_groups);
             err = cudaEventRecord(kernelStop, 0);
             if (err != cudaSuccess) cerr << "Error: failed to record kernel stop event\n" << cudaGetErrorString(err) << endl;
             err = cudaEventSynchronize(kernelStop);
@@ -528,25 +528,29 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
     const int nLayers = 8;
     const int nRequiredMatches = 7;
     const int nMaxRows = 11;
+    const int maxGroupsInBlock = 1000;
     int columnOffset = 4; // When encoding pixel into bitArray, need to offset columns so that
                           // only hits in the same column will match.
+    int nGroups = nGroupsInBlock[blockIdx.x];
 
-    extern __shared__ unsigned int nHashMatches[]; // Number of group hashIds that match event collection hashIds for each group
+    __shared__ unsigned int nHashMatches[maxGroupsInBlock]; // Number of group hashIds that match event collection hashIds for each group
+    __shared__ unsigned int sharedGroups[maxGroupsInBlock]; // Array of groups to be handled by this block
 
     // Initialise match counters
-    if (threadIdx.x < nGroupsInBlock[blockIdx.x]) {
+    if (threadIdx.x < nGroups) {
         nHashMatches[threadIdx.x] = 0;
+        sharedGroups[nGroups + threadIdx.x] = groups[blockBegin[blockIdx.x] + threadIdx.x];
     }
     __syncthreads();
 
     // Loop over groups in block and check if there are enough matches in the group
     // if bit array > 0 there are hits for that detector element for this event
     int lyr = threadIdx.x%nLayers;
-    int nLoops = (nGroupsInBlock[blockIdx.x]*nLayers/blockDim.x) + 1;
+    int nLoops = (nGroups*nLayers/blockDim.x) + 1;
     for (int n = 0; n < nLoops; n++) {
         int grpInBlock = (n*blockDim.x + threadIdx.x)/nLayers;
-        if (grpInBlock < nGroupsInBlock[blockIdx.x]) {
-            int grp = groups[blockBegin[blockIdx.x] + grpInBlock];
+        if (grpInBlock < nGroups) {
+            int grp = sharedGroups[nGroups + grpInBlock];
             int lyrHashId = hashId_array[grp*nLayers + lyr];
             // Automatically match if layer is wildcard
             if (lyrHashId == -1 || bitArray[hashIdToIndex[lyrHashId]] > 0) {
@@ -558,12 +562,11 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
 
     __syncthreads();
 
-    int row = threadIdx.x/nLayers;
-
-    for (int i = 0; i < nGroupsInBlock[blockIdx.x]; i++) {
-        int grp = groups[blockBegin[blockIdx.x] + i];
-        int lyrHashId = hashId_array[grp*nLayers + lyr];
+    for (int i = 0; i < nGroups; i++) {
         if (nHashMatches[i] >= nRequiredMatches) {
+            int grp = sharedGroups[nGroups + i];
+            int row = threadIdx.x/nLayers;
+            int lyrHashId = hashId_array[grp*nLayers + lyr];
 
             // Loop as many times as necessary for all threads to cover all patterns
             int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
