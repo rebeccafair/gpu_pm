@@ -128,6 +128,7 @@ void readEvents(string eventFile, EventContainer& e) {
 
     } else {
         cerr << "Error reading event file " << eventFile << endl;
+        exit(EXIT_FAILURE);
     }
 }
 

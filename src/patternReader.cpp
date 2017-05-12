@@ -90,6 +90,7 @@ void readPatterns(string patternFile, PatternContainer& p){
 
     } else {
         cerr << "Error reading pattern file " << patternFile << endl;
+        exit(EXIT_FAILURE);
     }
 }
 
