@@ -435,16 +435,19 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
     int lyrHashId = hashId_array[grp*nLayers + lyr];
 
     __shared__ unsigned int nHashMatches; // Number of group hashIds that match event collection hashIds
+    __shared__ int bitArrayIndex[nLayers]; // The index in the bit array corresponding to the hashId for a certain layer
 
     if (threadIdx.x == 0) {
         nHashMatches = 0;
     }
     __syncthreads();
 
-    // Get first nLayers threads to check if there are enough matches in the group
-    // if bit array > 0 there are hits for that detector element for this event
+    // Get first nLayers threads to set bit array index and check if there are 
+    // enough matches in the group if bit array > 0 there are hits for that 
+    // detector element for this event
     if (threadIdx.x < nLayers) {
-        if (lyrHashId == -1 || bitArray[hashIdToIndex[lyrHashId]] > 0) {
+        bitArrayIndex[lyr] = hashIdToIndex[lyrHashId];
+        if (lyrHashId == -1 || bitArray[bitArrayIndex[lyr]] > 0) {
             atomicAdd(&nHashMatches,1);
          }
     }
@@ -452,6 +455,12 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
     __syncthreads();
 
     if (nHashMatches >= nRequiredMatches) {
+
+        // Put relevant bit array elements in shared memory to reduce latency
+        __shared__ unsigned int sharedBitArray[nLayers*3];
+        if (threadIdx.x < nLayers*3) {
+            sharedBitArray[threadIdx.x] = bitArray[row*nDetectorElemsInPatt + bitArrayIndex[lyr]];
+        }
 
         // Loop as many times as necessary for all threads to cover all patterns
         int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
@@ -487,7 +496,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
                         unsigned char pattPixRow = hitPos%nMaxRows;
                         hitPos = (nMaxRows + columnOffset)*pattPixCol + pattPixRow;
                     }
-                    if ( ((1 << hitPos) & bitArray[dcBits*nDetectorElemsInPatt + hashIdToIndex[lyrHashId]]) > 0 ) {
+                    if ( ((1 << hitPos) & sharedBitArray[dcBits*nLayers + lyr]) > 0 ) {
                         atomicAdd(&nPattMatches[row],1);
                     }
 
