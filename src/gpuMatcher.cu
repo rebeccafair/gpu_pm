@@ -484,7 +484,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
                 if (lyrHashId == -1) {
                     atomicAdd(&nPattMatches[row],1);
                 // Else check if this event has a collection with the right hashId 
-                } else if (hashIdToIndex[lyrHashId] != -1) {
+                } else if (sharedBitArray[lyr] > 0) {
                     // Get pattern hit data
                     unsigned char pattHit = hitArray[hitArrayGroupIndices[grp] + n*blockDim.x + threadIdx.x];
                     unsigned char isPixel = ((pattHit >> 7) & 1);
