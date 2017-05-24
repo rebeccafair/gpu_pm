@@ -468,7 +468,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
 
         // Loop as many times as necessary for all threads to cover all patterns
         int hitArrayGroupBegin =  hitArrayGroupIndices[grp];
-        int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupIndices[grp])/nLayers;
+        int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupBegin)/nLayers;
         for (int patt = threadIdx.x; patt < nPattInGrp; patt += blockDim.x) {
             int pattMatches = 0;
 
@@ -523,102 +523,102 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
     const int nLayers = 8;
     const int nRequiredMatches = 7;
     const int nMaxRows = 11;
-    const int maxGroupsInBlock = 1000;
     int columnOffset = 4; // When encoding pixel into bitArray, need to offset columns so that
                           // only hits in the same column will match.
 
-    __shared__ unsigned int nHashMatches[maxGroupsInBlock]; // Number of group hashIds that match event collection hashIds for each group
-    __shared__ unsigned int sharedGroups[maxGroupsInBlock]; // Array of groups to be handled by this block
+    __shared__ unsigned int sharedGroups[128]; // Array of groups to be handled by this block
+    __shared__ unsigned int nHashMatches[128]; // Holds number of hash ID matches for each group
+                                               // Size is max number of groups that can be handled in each loop with 8 threads/group
+                                               // ie. 1024/8
     int nGroups = nGroupsInBlock[blockIdx.x];
+    int row = threadIdx.x/nLayers;
+    int lyr = threadIdx.x%nLayers;
 
-    // Loop over groups in block and check if there are enough matches in the group
-    // if bit array > 0 there are hits for that detector element for this event
-    for (int i = threadIdx.x; i < nGroups; i += blockDim.x) {
-        int grp = groups[blockBegin[blockIdx.x] + i];
-        sharedGroups[i] = grp;
-        int nMatches = 0;
-        for (int l = 0; l < nLayers; l++) {
-            int lyrHashId = hashId_array[grp*nLayers + l];
+    for (int i = 0; i < nGroups; i += blockDim.x/nLayers) {
+
+        if (lyr==0) { nHashMatches[row] = 0; }
+        __syncthreads();
+
+        // Get each thread to check 1 hash ID for 1 group for a match
+        // if bit array > 0 there are hits for that detector element for this event
+        if ( i + row < nGroups ) {
+            int grp = groups[blockBegin[blockIdx.x] + i + row];
+            sharedGroups[row] = grp;
+            int lyrHashId = hashId_array[grp*nLayers + lyr];
             // Automatically match if layer is wildcard
             if (lyrHashId == -1 || bitArray[hashIdToIndex[lyrHashId]] > 0) {
-                nMatches++;
-            }
-            // Break out if a match is impossible for this group
-            if ( nMatches + nLayers - l + 1 < nRequiredMatches ) {
-                break;
+                atomicAdd(&nHashMatches[row],1);
             }
         }
-        nHashMatches[i] = nMatches;
-    }
-    __syncthreads();
+ 
+       // Loop over groups and match patterns if there are enough hashId matches
+       for (int j = 0; j < blockDim.x/nLayers; j++) {
+           __syncthreads();
+           if (nHashMatches[j] >= nRequiredMatches) {
+               int grp = sharedGroups[j];
 
-    // Loop over groups and match patterns if there are enough hashId matches
-    for (int j = 0; j < nGroups; j++) {
-        __syncthreads();
-        if (nHashMatches[j] >= nRequiredMatches) {
-            int grp = sharedGroups[j];
+               // Put relevant bit array elements and hash IDs in shared memory to reduce memory latency
+               __shared__ int lyrHashIds[nLayers];
+               __shared__ unsigned int sharedBitArray[nLayers*3];
+               if (threadIdx.x < nLayers) {
+                   lyrHashIds[threadIdx.x] = hashId_array[grp*nLayers + threadIdx.x];
+               }
+               __syncthreads();
+               if (threadIdx.x < nLayers*3) {
+                   sharedBitArray[threadIdx.x] = bitArray[row*nDetectorElemsInPatt + hashIdToIndex[lyrHashIds[lyr]]];
+               }
+               __syncthreads();
 
-            // Put relevant bit array elements in shared memory to reduce memory latency
-            __shared__ int lyrHashIds[nLayers];
-            __shared__ unsigned int sharedBitArray[nLayers*3];
-            int row = threadIdx.x/nLayers;
-            if (threadIdx.x < nLayers) {
-                lyrHashIds[threadIdx.x] = hashId_array[grp*nLayers + threadIdx.x];
-            }
-            __syncthreads();
-            if (threadIdx.x < nLayers*3) {
-                sharedBitArray[threadIdx.x] = bitArray[row*nDetectorElemsInPatt + hashIdToIndex[lyrHashIds[threadIdx.x%nLayers]]];
-            }
-            __syncthreads();
+               // Loop as many times as necessary for all threads to cover all patterns
+               int hitArrayGroupBegin = hitArrayGroupIndices[grp];
+               int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupBegin)/nLayers;
+               for (int patt = threadIdx.x; patt < nPattInGrp; patt += blockDim.x) {
+                   int pattMatches = 0;
 
-            // Loop as many times as necessary for all threads to cover all patterns
-            int hitArrayGroupBegin = hitArrayGroupIndices[grp];
-            int nPattInGrp = (hitArrayGroupIndices[grp + 1] - hitArrayGroupBegin)/nLayers;
-            for (int patt = threadIdx.x; patt < nPattInGrp; patt += blockDim.x) {
-                int pattMatches = 0;
+                   // Loop over layers
+                   for (int l = 0; l < nLayers; l++) {
+                       int lyrHashId = lyrHashIds[l];
 
-                // Loop over layers
-                for (int l = 0; l < nLayers; l++) {
-                    int lyrHashId = lyrHashIds[l];
+                       // Check for wildcard
+                       if (lyrHashId == -1) {
+                           pattMatches++;
+                       // Else check if this event has a hit on this detector element
+                       } else if (sharedBitArray[l] > 0) {
 
-                    // Check for wildcard
-                    if (lyrHashId == -1) {
-                        pattMatches++;
-                    // Else check if this event has a hit on this detector element
-                    } else if (sharedBitArray[l] > 0) {
+                           // Get pattern hit data
+                           unsigned char pattHit = hitArray[hitArrayGroupBegin + patt*nLayers + l];
+                           unsigned char isPixel = ((pattHit >> 7) & 1);
+                           unsigned char hitPos = ((pattHit >> 2) & 31); // Get superstrip position if strip, or row if pixel. Occupies bits 2-6
+                           unsigned char dcBits = (pattHit & 3);
+                           if (dcBits == 3) { dcBits = 2; }
+                           if (isPixel) {
+                               unsigned char pattPixCol = hitPos/nMaxRows;
+                               unsigned char pattPixRow = hitPos%nMaxRows;
+                               hitPos = (nMaxRows + columnOffset)*pattPixCol + pattPixRow;
+                           }
+                           if ( ((1 << hitPos) & sharedBitArray[dcBits*nLayers + l]) > 0 ) {
+                               pattMatches++;
+                           }
+                       }
 
-                        // Get pattern hit data
-                        unsigned char pattHit = hitArray[hitArrayGroupBegin + patt*nLayers + l];
-                        unsigned char isPixel = ((pattHit >> 7) & 1);
-                        unsigned char hitPos = ((pattHit >> 2) & 31); // Get superstrip position if strip, or row if pixel. Occupies bits 2-6
-                        unsigned char dcBits = (pattHit & 3);
-                        if (dcBits == 3) { dcBits = 2; }
-                        if (isPixel) {
-                            unsigned char pattPixCol = hitPos/nMaxRows;
-                            unsigned char pattPixRow = hitPos%nMaxRows;
-                            hitPos = (nMaxRows + columnOffset)*pattPixCol + pattPixRow;
-                        }
-                        if ( ((1 << hitPos) & sharedBitArray[dcBits*nLayers + l]) > 0 ) {
-                            pattMatches++;
-                        }
-                    }
+                       // Break out if a match is impossible for this pattern
+                       if ( pattMatches + nLayers - l + 1 < nRequiredMatches ) {
+                           break;
+                       }
+                   } // End loop over layers
 
-                    // Break out if a match is impossible for this pattern
-                    if ( pattMatches + nLayers - l + 1 < nRequiredMatches ) {
-                        break;
-                    }
-                } // End loop over layers
+                   // Output matching pattern ids to array
+                   if (pattMatches >= nRequiredMatches) {
+                       int i = atomicAdd(nMatches,1);
+                       int pattId = (hitArrayGroupBegin/nLayers) + patt;
+                       matchingPattIds[i] = pattId;
+                   }
 
-                // Output matching pattern ids to array
-                if (pattMatches >= nRequiredMatches) {
-                    int i = atomicAdd(nMatches,1);
-                    int pattId = (hitArrayGroupBegin/nLayers) + patt;
-                    matchingPattIds[i] = pattId;
-                }
+               } // End loop over patterns
 
-            } // End loop over patterns
-
-        } // End if (nHashMatches >= nRequiredMatches)
-    } // End loop over groups*/
+           } // End if (nHashMatches >= nRequiredMatches)
+       } // End loop over groups
+   }
 
 }
+
