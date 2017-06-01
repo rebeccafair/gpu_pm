@@ -1,0 +1,1082 @@
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 45 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 664 ms
+Total matches: 8040
+CPU Matching completed in 5735 ms
+==54451== NVPROF is profiling process 54451, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64
+Allocated and copied arrays to device in 8.4983 ms
+Ran kernel 100 times in 27.5586 ms
+Created bit arrays 100 times in 6.33898 ms
+Average GPU matching kernel time with 64 threads is 0.275586 ms
+Average bit array creation time is 0.0633898 ms
+Freed device memory in 0.454496 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54451== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64
+==54451== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.25%  26.265ms       100  262.65us  187.05us  283.31us  matchByBlockSingle(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int)
+  3.72%  1.0141ms       104  9.7500us  1.0880us  804.80us  [CUDA memcpy HtoD]
+  0.02%  5.4720us         2  2.7360us  1.9840us  3.4880us  [CUDA memset]
+  0.02%  4.1920us         2  2.0960us     672ns  3.5200us  [CUDA memcpy DtoH]
+
+==54451== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 91.58%  450.57ms         8  56.321ms     493ns  450.56ms  cudaEventCreate
+  5.38%  26.474ms       102  259.55us  2.4620us  286.24us  cudaEventSynchronize
+  1.47%  7.2494ms         7  1.0356ms  15.047us  1.3564ms  cudaMalloc
+  0.44%  2.1881ms       106  20.642us  7.8840us  919.49us  cudaMemcpy
+  0.26%  1.2560ms         2  627.99us  29.660us  1.2263ms  cuDeviceGetName
+  0.19%  923.85us       182  5.0760us     135ns  303.33us  cuDeviceGetAttribute
+  0.18%  872.52us       404  2.1590us  1.7170us  13.860us  cudaEventRecord
+  0.17%  813.34us       100  8.1330us  7.0710us  22.380us  cudaLaunch
+  0.15%  737.12us         2  368.56us  332.62us  404.50us  cuDeviceTotalMem
+  0.09%  446.06us         9  49.562us  1.3730us  146.89us  cudaFree
+  0.04%  213.69us       202  1.0570us     906ns  2.6730us  cudaEventElapsedTime
+  0.03%  157.12us       900     174ns     136ns  3.4840us  cudaSetupArgument
+  0.01%  42.092us         2  21.046us  11.038us  31.054us  cudaMemset
+  0.01%  33.235us       100     332ns     277ns  1.5540us  cudaConfigureCall
+  0.00%  8.1260us         1  8.1260us  8.1260us  8.1260us  cudaDeviceSynchronize
+  0.00%  3.7040us         3  1.2340us     197ns  3.2220us  cuDeviceGetCount
+  0.00%  1.8160us         6     302ns     160ns     585ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 46 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 672 ms
+Total matches: 8040
+CPU Matching completed in 5564 ms
+==54467== NVPROF is profiling process 54467, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128
+Allocated and copied arrays to device in 9.88739 ms
+Ran kernel 100 times in 25.1914 ms
+Created bit arrays 100 times in 6.56 ms
+Average GPU matching kernel time with 128 threads is 0.251914 ms
+Average bit array creation time is 0.0656 ms
+Freed device memory in 0.473568 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54467== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128
+==54467== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 94.77%  23.971ms       100  239.71us  172.52us  287.44us  matchByBlockSingle(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int)
+  5.19%  1.3135ms       104  12.629us  1.0880us  1.1012ms  [CUDA memcpy HtoD]
+  0.02%  5.4720us         2  2.7360us  1.9840us  3.4880us  [CUDA memset]
+  0.02%  4.2560us         2  2.1280us     736ns  3.5200us  [CUDA memcpy DtoH]
+
+==54467== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 91.70%  443.19ms         8  55.399ms     512ns  443.18ms  cudaEventCreate
+  5.00%  24.158ms       102  236.84us  2.6470us  289.70us  cudaEventSynchronize
+  1.70%  8.2303ms         7  1.1758ms  16.590us  2.1913ms  cudaMalloc
+  0.51%  2.4699ms       106  23.301us  7.8610us  1.2985ms  cudaMemcpy
+  0.26%  1.2667ms         2  633.33us  28.458us  1.2382ms  cuDeviceGetName
+  0.17%  827.04us       404  2.0470us  1.6810us  13.757us  cudaEventRecord
+  0.17%  798.60us       100  7.9860us  7.1550us  20.362us  cudaLaunch
+  0.16%  756.79us       182  4.1580us     129ns  221.08us  cuDeviceGetAttribute
+  0.14%  662.89us         2  331.45us  328.00us  334.89us  cuDeviceTotalMem
+  0.10%  464.42us         9  51.602us  1.1200us  149.52us  cudaFree
+  0.04%  216.18us       202  1.0700us     917ns  2.1490us  cudaEventElapsedTime
+  0.03%  162.75us       900     180ns     139ns  3.3380us  cudaSetupArgument
+  0.01%  45.497us         2  22.748us  8.3220us  37.175us  cudaMemset
+  0.01%  31.626us       100     316ns     244ns  1.0440us  cudaConfigureCall
+  0.00%  9.1400us         1  9.1400us  9.1400us  9.1400us  cudaDeviceSynchronize
+  0.00%  3.1580us         3  1.0520us     189ns  2.7610us  cuDeviceGetCount
+  0.00%  1.6230us         6     270ns     131ns     658ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 50 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 740 ms
+Total matches: 8040
+CPU Matching completed in 5594 ms
+==54481== NVPROF is profiling process 54481, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192
+Allocated and copied arrays to device in 9.89123 ms
+Ran kernel 100 times in 33.3385 ms
+Created bit arrays 100 times in 7.56013 ms
+Average GPU matching kernel time with 192 threads is 0.333385 ms
+Average bit array creation time is 0.0756013 ms
+Freed device memory in 0.453376 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54481== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192
+==54481== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 95.26%  31.898ms       100  318.98us  237.83us  376.43us  matchByBlockSingle(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int)
+  4.72%  1.5790ms       104  15.183us  1.0880us  1.3700ms  [CUDA memcpy HtoD]
+  0.02%  5.4400us         2  2.7200us  1.9520us  3.4880us  [CUDA memset]
+  0.01%  4.2880us         2  2.1440us     736ns  3.5520us  [CUDA memcpy DtoH]
+
+==54481== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 89.66%  426.18ms         8  53.273ms     570ns  426.16ms  cudaEventCreate
+  6.74%  32.057ms       102  314.29us  3.5580us  378.88us  cudaEventSynchronize
+  1.65%  7.8357ms         7  1.1194ms  15.127us  1.3513ms  cudaMalloc
+  0.67%  3.2033ms       106  30.219us  8.9700us  1.5885ms  cudaMemcpy
+  0.36%  1.6993ms         2  849.66us  848.85us  850.48us  cuDeviceTotalMem
+  0.27%  1.3025ms       182  7.1560us     373ns  316.51us  cuDeviceGetAttribute
+  0.21%  977.60us       404  2.4190us  1.7620us  13.056us  cudaEventRecord
+  0.20%  957.72us       100  9.5770us  7.3750us  39.833us  cudaLaunch
+  0.09%  445.09us         9  49.454us  1.2210us  147.33us  cudaFree
+  0.06%  261.51us       202  1.2940us     899ns  4.1500us  cudaEventElapsedTime
+  0.04%  187.19us       900     207ns     137ns  4.9530us  cudaSetupArgument
+  0.02%  98.767us         2  49.383us  45.033us  53.734us  cuDeviceGetName
+  0.02%  77.553us         2  38.776us  18.876us  58.677us  cudaMemset
+  0.01%  41.674us       100     416ns     289ns  2.1740us  cudaConfigureCall
+  0.00%  7.1060us         1  7.1060us  7.1060us  7.1060us  cudaDeviceSynchronize
+  0.00%  6.7910us         3  2.2630us     544ns  5.3270us  cuDeviceGetCount
+  0.00%  3.7580us         6     626ns     411ns  1.1500us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 44 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 674 ms
+Total matches: 8040
+CPU Matching completed in 5575 ms
+==54494== NVPROF is profiling process 54494, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256
+Allocated and copied arrays to device in 8.66982 ms
+Ran kernel 100 times in 39.2193 ms
+Created bit arrays 100 times in 6.64816 ms
+Average GPU matching kernel time with 256 threads is 0.392193 ms
+Average bit array creation time is 0.0664816 ms
+Freed device memory in 0.462432 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54494== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256
+==54494== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.65%  37.956ms       100  379.56us  286.73us  444.91us  matchByBlockSingle(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int)
+  3.32%  1.3047ms       104  12.544us  1.0880us  1.0935ms  [CUDA memcpy HtoD]
+  0.01%  5.5680us         2  2.7840us  1.9840us  3.5840us  [CUDA memset]
+  0.01%  4.3530us         2  2.1760us     800ns  3.5530us  [CUDA memcpy DtoH]
+
+==54494== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 88.71%  417.48ms         8  52.185ms     560ns  417.47ms  cudaEventCreate
+  8.12%  38.191ms       102  374.42us  2.5760us  447.81us  cudaEventSynchronize
+  1.50%  7.0400ms         7  1.0057ms  15.303us  1.3512ms  cudaMalloc
+  0.52%  2.4471ms       106  23.085us  7.7960us  1.2702ms  cudaMemcpy
+  0.31%  1.4368ms         2  718.42us  28.462us  1.4084ms  cuDeviceGetName
+  0.18%  849.73us       404  2.1030us  1.7170us  13.970us  cudaEventRecord
+  0.18%  827.89us       100  8.2780us  7.2440us  19.398us  cudaLaunch
+  0.16%  755.08us       182  4.1480us     128ns  218.84us  cuDeviceGetAttribute
+  0.14%  661.15us         2  330.58us  327.97us  333.19us  cuDeviceTotalMem
+  0.10%  453.75us         9  50.416us  1.3330us  144.65us  cudaFree
+  0.05%  223.61us       202  1.1060us     935ns  1.9490us  cudaEventElapsedTime
+  0.03%  152.92us       900     169ns     138ns  2.9500us  cudaSetupArgument
+  0.01%  42.466us         2  21.233us  8.3110us  34.155us  cudaMemset
+  0.01%  31.016us       100     310ns     261ns  1.0040us  cudaConfigureCall
+  0.00%  8.0440us         1  8.0440us  8.0440us  8.0440us  cudaDeviceSynchronize
+  0.00%  3.0690us         3  1.0230us     218ns  2.6300us  cuDeviceGetCount
+  0.00%  1.8090us         6     301ns     130ns     727ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 41 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 664 ms
+Total matches: 8040
+CPU Matching completed in 5565 ms
+==54507== NVPROF is profiling process 54507, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 500
+Allocated and copied arrays to device in 9.86179 ms
+Ran kernel 100 times in 994.989 ms
+Created bit arrays 100 times in 6.57421 ms
+Average GPU matching kernel time with 64 threads and 500 blocks is 9.94989 ms
+Average bit array creation time is 0.0657421 ms
+Error: d_matchingPattIds not copied from device to host
+Freed device memory in 0.511456 ms
+Comparing match results...
+nMatches comparison failed: 8040 != 34387
+Failed on patternId 5 != 0
+Exiting...
+==54507== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 500
+==54507== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 99.84%  993.46ms       100  9.9346ms  5.6829ms  15.508ms  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  0.15%  1.5411ms       107  14.402us     896ns  1.3259ms  [CUDA memcpy HtoD]
+  0.00%  5.5680us         2  2.7840us  1.9520us  3.6160us  [CUDA memset]
+  0.00%     576ns         1     576ns     576ns     576ns  [CUDA memcpy DtoH]
+
+==54507== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 68.40%  993.70ms       102  9.7422ms  3.1680us  15.511ms  cudaEventSynchronize
+ 30.45%  442.36ms         8  55.295ms     660ns  442.34ms  cudaEventCreate
+  0.63%  9.2054ms        10  920.54us  14.657us  1.3621ms  cudaMalloc
+  0.21%  3.0957ms       109  28.400us  2.2880us  1.5386ms  cudaMemcpy
+  0.06%  939.18us       404  2.3240us  1.6950us  14.160us  cudaEventRecord
+  0.06%  932.13us       100  9.3210us  7.9180us  41.707us  cudaLaunch
+  0.05%  759.62us       182  4.1730us     133ns  221.57us  cuDeviceGetAttribute
+  0.05%  655.29us         2  327.64us  324.13us  331.16us  cuDeviceTotalMem
+  0.03%  502.47us         9  55.830us  6.2510us  121.52us  cudaFree
+  0.02%  234.99us       202  1.1630us     918ns  4.3430us  cudaEventElapsedTime
+  0.02%  219.37us      1200     182ns     136ns  5.7660us  cudaSetupArgument
+  0.01%  83.254us         2  41.627us  24.894us  58.360us  cudaMemset
+  0.00%  60.626us         2  30.313us  28.560us  32.066us  cuDeviceGetName
+  0.00%  32.918us       100     329ns     260ns  2.0740us  cudaConfigureCall
+  0.00%  8.5860us         1  8.5860us  8.5860us  8.5860us  cudaDeviceSynchronize
+  0.00%  3.4480us         3  1.1490us     202ns  3.0160us  cuDeviceGetCount
+  0.00%  1.5870us         6     264ns     127ns     569ns  cuDeviceGet
+======== Error: Application returned non-zero code 1
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 40 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 659 ms
+Total matches: 8040
+CPU Matching completed in 5566 ms
+==54520== NVPROF is profiling process 54520, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 500
+Allocated and copied arrays to device in 9.8129 ms
+Ran kernel 100 times in 51.6487 ms
+Created bit arrays 100 times in 6.85478 ms
+Average GPU matching kernel time with 128 threads and 500 blocks is 0.516487 ms
+Average bit array creation time is 0.0685478 ms
+Freed device memory in 0.499296 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54520== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 500
+==54520== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.02%  50.225ms       100  502.25us  326.22us  617.40us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.97%  1.5366ms       107  14.360us     832ns  1.3308ms  [CUDA memcpy HtoD]
+  0.01%  4.5770us         2  2.2880us  1.6330us  2.9440us  [CUDA memset]
+  0.01%  4.0330us         2  2.0160us     544ns  3.4890us  [CUDA memcpy DtoH]
+
+==54520== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.01%  448.90ms         8  56.112ms     574ns  448.88ms  cudaEventCreate
+  9.77%  50.381ms       102  493.93us  3.2540us  619.63us  cudaEventSynchronize
+  1.78%  9.1608ms        10  916.08us  14.357us  1.3546ms  cudaMalloc
+  0.60%  3.0716ms       109  28.179us  8.0320us  1.5440ms  cudaMemcpy
+  0.18%  951.83us       404  2.3560us  1.7630us  13.640us  cudaEventRecord
+  0.17%  868.11us       100  8.6810us  6.9560us  43.397us  cudaLaunch
+  0.15%  754.35us       182  4.1440us     134ns  219.63us  cuDeviceGetAttribute
+  0.13%  660.38us         2  330.19us  325.60us  334.78us  cuDeviceTotalMem
+  0.09%  488.82us         9  54.313us  6.6270us  121.85us  cudaFree
+  0.05%  241.35us       202  1.1940us     916ns  4.6100us  cudaEventElapsedTime
+  0.04%  219.68us      1200     183ns     136ns  5.6800us  cudaSetupArgument
+  0.02%  78.663us         2  39.331us  20.000us  58.663us  cudaMemset
+  0.01%  65.647us         2  32.823us  28.371us  37.276us  cuDeviceGetName
+  0.01%  36.729us       100     367ns     295ns  1.9800us  cudaConfigureCall
+  0.00%  7.9950us         1  7.9950us  7.9950us  7.9950us  cudaDeviceSynchronize
+  0.00%  6.5100us         3  2.1700us     206ns  5.8340us  cuDeviceGetCount
+  0.00%  2.3910us         6     398ns     134ns     735ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 46 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 703 ms
+Total matches: 8040
+CPU Matching completed in 5592 ms
+==54533== NVPROF is profiling process 54533, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 500
+Allocated and copied arrays to device in 5.42042 ms
+Ran kernel 100 times in 47.9276 ms
+Created bit arrays 100 times in 6.41571 ms
+Average GPU matching kernel time with 192 threads and 500 blocks is 0.479276 ms
+Average bit array creation time is 0.0641571 ms
+Freed device memory in 0.491456 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54533== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 500
+==54533== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.80%  46.526ms       100  465.26us  306.99us  573.94us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.19%  1.0404ms       107  9.7220us     800ns  835.17us  [CUDA memcpy HtoD]
+  0.01%  4.5760us         2  2.2880us  1.6640us  2.9120us  [CUDA memset]
+  0.01%  4.0320us         2  2.0160us     576ns  3.4560us  [CUDA memcpy DtoH]
+
+==54533== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.63%  421.53ms         8  52.692ms     517ns  421.52ms  cudaEventCreate
+  9.71%  46.717ms       102  458.01us  2.3040us  576.82us  cudaEventSynchronize
+  0.98%  4.6966ms        10  469.66us  5.9480us  1.3645ms  cudaMalloc
+  0.48%  2.2953ms       109  21.057us  5.3210us  961.36us  cudaMemcpy
+  0.36%  1.7242ms         2  862.09us  860.06us  864.12us  cuDeviceTotalMem
+  0.27%  1.3021ms       182  7.1540us     367ns  323.56us  cuDeviceGetAttribute
+  0.18%  863.86us       404  2.1380us  1.6810us  19.637us  cudaEventRecord
+  0.17%  834.05us       100  8.3400us  7.3750us  30.206us  cudaLaunch
+  0.10%  480.84us         9  53.426us  6.1450us  115.79us  cudaFree
+  0.05%  223.48us       202  1.1060us     917ns  2.1830us  cudaEventElapsedTime
+  0.04%  201.15us      1200     167ns     136ns  3.3010us  cudaSetupArgument
+  0.02%  97.451us         2  48.725us  44.884us  52.567us  cuDeviceGetName
+  0.01%  38.873us         2  19.436us  7.5360us  31.337us  cudaMemset
+  0.01%  32.424us       100     324ns     271ns  1.0790us  cudaConfigureCall
+  0.00%  8.8120us         1  8.8120us  8.8120us  8.8120us  cudaDeviceSynchronize
+  0.00%  6.3130us         3  2.1040us     473ns  5.2730us  cuDeviceGetCount
+  0.00%  3.4700us         6     578ns     380ns  1.1030us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 39 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 655 ms
+Total matches: 8040
+CPU Matching completed in 5677 ms
+==54548== NVPROF is profiling process 54548, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 500
+Allocated and copied arrays to device in 9.31981 ms
+Ran kernel 100 times in 49.5669 ms
+Created bit arrays 100 times in 6.28931 ms
+Average GPU matching kernel time with 256 threads and 500 blocks is 0.495669 ms
+Average bit array creation time is 0.0628931 ms
+Freed device memory in 0.509696 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54548== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 500
+==54548== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.54%  48.221ms       100  482.21us  303.56us  608.15us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.44%  1.2073ms       107  11.282us     832ns  1.0004ms  [CUDA memcpy HtoD]
+  0.01%  4.5760us         2  2.2880us  1.6320us  2.9440us  [CUDA memset]
+  0.01%  4.0010us         2  2.0000us     544ns  3.4570us  [CUDA memcpy DtoH]
+
+==54548== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 86.67%  423.26ms         8  52.907ms     497ns  423.25ms  cudaEventCreate
+  9.92%  48.421ms       102  474.71us  2.5230us  610.84us  cudaEventSynchronize
+  1.69%  8.2535ms        10  825.35us  5.5660us  1.3666ms  cudaMalloc
+  0.53%  2.5681ms       109  23.560us  5.6060us  1.2160ms  cudaMemcpy
+  0.35%  1.7260ms         2  863.02us  861.98us  864.06us  cuDeviceTotalMem
+  0.27%  1.3165ms       182  7.2330us     377ns  322.64us  cuDeviceGetAttribute
+  0.17%  849.38us       404  2.1020us  1.6860us  14.106us  cudaEventRecord
+  0.17%  815.66us       100  8.1560us  7.2100us  19.467us  cudaLaunch
+  0.10%  500.04us         9  55.560us  5.9640us  123.11us  cudaFree
+  0.05%  226.90us       202  1.1230us     929ns  2.2160us  cudaEventElapsedTime
+  0.04%  204.51us      1200     170ns     137ns  3.4790us  cudaSetupArgument
+  0.02%  98.957us         2  49.478us  45.240us  53.717us  cuDeviceGetName
+  0.01%  39.262us         2  19.631us  10.160us  29.102us  cudaMemset
+  0.01%  33.461us       100     334ns     283ns  1.2220us  cudaConfigureCall
+  0.00%  8.1880us         1  8.1880us  8.1880us  8.1880us  cudaDeviceSynchronize
+  0.00%  6.2390us         3  2.0790us     473ns  5.0730us  cuDeviceGetCount
+  0.00%  3.8430us         6     640ns     447ns  1.0560us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 45 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 660 ms
+Total matches: 8040
+CPU Matching completed in 5688 ms
+==54561== NVPROF is profiling process 54561, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 1000
+Allocated and copied arrays to device in 9.14054 ms
+Ran kernel 100 times in 52.4461 ms
+Created bit arrays 100 times in 6.53328 ms
+Average GPU matching kernel time with 64 threads and 1000 blocks is 0.524461 ms
+Average bit array creation time is 0.0653328 ms
+Freed device memory in 0.515264 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54561== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 1000
+==54561== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 98.00%  51.032ms       100  510.32us  329.87us  651.07us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  1.98%  1.0307ms       107  9.6320us     928ns  821.28us  [CUDA memcpy HtoD]
+  0.01%  4.5440us         2  2.2720us  1.6320us  2.9120us  [CUDA memset]
+  0.01%  4.0330us         2  2.0160us     576ns  3.4570us  [CUDA memcpy DtoH]
+
+==54561== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 86.15%  413.50ms         8  51.688ms     556ns  413.49ms  cudaEventCreate
+ 10.67%  51.240ms       102  502.35us  2.4500us  653.50us  cudaEventSynchronize
+  1.74%  8.3488ms        10  834.88us  6.1530us  1.3485ms  cudaMalloc
+  0.51%  2.4390ms       109  22.375us  6.1290us  968.18us  cudaMemcpy
+  0.23%  1.1015ms       404  2.7260us  1.9420us  13.644us  cudaEventRecord
+  0.18%  874.80us       100  8.7480us  7.7250us  20.253us  cudaLaunch
+  0.16%  751.51us       182  4.1290us     129ns  213.38us  cuDeviceGetAttribute
+  0.14%  659.33us         2  329.67us  326.05us  333.28us  cuDeviceTotalMem
+  0.11%  504.55us         9  56.060us  6.3670us  127.00us  cudaFree
+  0.05%  222.57us       202  1.1010us     913ns  2.2400us  cudaEventElapsedTime
+  0.04%  202.24us      1200     168ns     137ns  3.1800us  cudaSetupArgument
+  0.01%  60.015us         2  30.007us  26.880us  33.135us  cuDeviceGetName
+  0.01%  46.325us         2  23.162us  9.5050us  36.820us  cudaMemset
+  0.01%  33.641us       100     336ns     275ns  1.0980us  cudaConfigureCall
+  0.00%  9.9610us         1  9.9610us  9.9610us  9.9610us  cudaDeviceSynchronize
+  0.00%  3.6000us         3  1.2000us     204ns  3.1450us  cuDeviceGetCount
+  0.00%  1.7920us         6     298ns     142ns     555ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 44 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 657 ms
+Total matches: 8040
+CPU Matching completed in 5562 ms
+==54578== NVPROF is profiling process 54578, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 1000
+Allocated and copied arrays to device in 4.32272 ms
+Ran kernel 100 times in 44.9618 ms
+Created bit arrays 100 times in 6.41213 ms
+Average GPU matching kernel time with 128 threads and 1000 blocks is 0.449618 ms
+Average bit array creation time is 0.0641213 ms
+Freed device memory in 0.660928 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54578== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 1000
+==54578== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.73%  43.568ms       100  435.68us  278.41us  546.84us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.25%  1.0051ms       107  9.3930us     928ns  795.46us  [CUDA memcpy HtoD]
+  0.01%  4.5770us         2  2.2880us  1.6330us  2.9440us  [CUDA memset]
+  0.01%  4.0000us         2  2.0000us     576ns  3.4240us  [CUDA memcpy DtoH]
+
+==54578== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 88.84%  443.73ms         8  55.466ms     496ns  443.72ms  cudaEventCreate
+  8.76%  43.754ms       102  428.96us  2.6410us  548.50us  cudaEventSynchronize
+  0.73%  3.6644ms        10  366.44us  6.1570us  560.92us  cudaMalloc
+  0.46%  2.2894ms       109  21.004us  5.8990us  918.98us  cudaMemcpy
+  0.35%  1.7618ms         2  880.92us  862.39us  899.45us  cuDeviceTotalMem
+  0.26%  1.2836ms       182  7.0520us     376ns  320.83us  cuDeviceGetAttribute
+  0.17%  868.13us       100  8.6810us  7.4790us  20.092us  cudaLaunch
+  0.17%  858.65us       404  2.1250us  1.7470us  7.2080us  cudaEventRecord
+  0.13%  649.60us         9  72.178us  6.4380us  211.83us  cudaFree
+  0.05%  227.47us       202  1.1260us     914ns  3.1570us  cudaEventElapsedTime
+  0.04%  204.28us      1200     170ns     136ns  3.2600us  cudaSetupArgument
+  0.02%  97.887us         2  48.943us  44.937us  52.950us  cuDeviceGetName
+  0.01%  43.781us         2  21.890us  8.0160us  35.765us  cudaMemset
+  0.01%  32.445us       100     324ns     277ns  1.0950us  cudaConfigureCall
+  0.00%  8.5500us         1  8.5500us  8.5500us  8.5500us  cudaDeviceSynchronize
+  0.00%  6.5440us         3  2.1810us     507ns  5.1840us  cuDeviceGetCount
+  0.00%  3.7500us         6     625ns     427ns  1.1300us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 43 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 736 ms
+Total matches: 8040
+CPU Matching completed in 5637 ms
+==54591== NVPROF is profiling process 54591, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 1000
+Allocated and copied arrays to device in 8.32083 ms
+Ran kernel 100 times in 54.0143 ms
+Created bit arrays 100 times in 6.37306 ms
+Average GPU matching kernel time with 192 threads and 1000 blocks is 0.540143 ms
+Average bit array creation time is 0.0637306 ms
+Freed device memory in 0.504608 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54591== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 1000
+==54591== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 98.04%  52.649ms       100  526.49us  334.93us  658.55us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  1.95%  1.0447ms       107  9.7630us  1.0880us  823.23us  [CUDA memcpy HtoD]
+  0.01%  5.4720us         2  2.7360us  1.9840us  3.4880us  [CUDA memset]
+  0.01%  4.2240us         2  2.1120us     672ns  3.5520us  [CUDA memcpy DtoH]
+
+==54591== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 86.51%  437.19ms         8  54.648ms     516ns  437.17ms  cudaEventCreate
+ 10.47%  52.896ms       102  518.59us  2.6350us  662.05us  cudaEventSynchronize
+  1.50%  7.5972ms        10  759.72us  5.4460us  1.3477ms  cudaMalloc
+  0.45%  2.2832ms       109  20.947us  5.4360us  955.99us  cudaMemcpy
+  0.40%  2.0084ms       182  11.034us     131ns  1.3647ms  cuDeviceGetAttribute
+  0.17%  851.66us       404  2.1080us  1.6730us  14.117us  cudaEventRecord
+  0.16%  811.37us       100  8.1130us  6.9550us  19.942us  cudaLaunch
+  0.14%  682.46us         2  341.23us  328.77us  353.70us  cuDeviceTotalMem
+  0.10%  494.44us         9  54.938us  6.1920us  124.90us  cudaFree
+  0.04%  222.47us       202  1.1010us     897ns  2.3770us  cudaEventElapsedTime
+  0.04%  201.27us      1200     167ns     136ns  3.2210us  cudaSetupArgument
+  0.01%  59.297us         2  29.648us  29.023us  30.274us  cuDeviceGetName
+  0.01%  41.096us         2  20.548us  7.8470us  33.249us  cudaMemset
+  0.01%  34.889us       100     348ns     284ns     988ns  cudaConfigureCall
+  0.00%  7.5630us         1  7.5630us  7.5630us  7.5630us  cudaDeviceSynchronize
+  0.00%  3.2460us         3  1.0820us     141ns  2.8620us  cuDeviceGetCount
+  0.00%  1.6550us         6     275ns     132ns     481ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 43 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 655 ms
+Total matches: 8040
+CPU Matching completed in 5558 ms
+==54604== NVPROF is profiling process 54604, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 1000
+Allocated and copied arrays to device in 7.70294 ms
+Ran kernel 100 times in 53.835 ms
+Created bit arrays 100 times in 6.40202 ms
+Average GPU matching kernel time with 256 threads and 1000 blocks is 0.53835 ms
+Average bit array creation time is 0.0640202 ms
+Freed device memory in 0.495584 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54604== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 1000
+==54604== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.97%  52.401ms       100  524.01us  331.31us  666.59us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.01%  1.0753ms       107  10.049us  1.0560us  853.63us  [CUDA memcpy HtoD]
+  0.01%  5.5050us         2  2.7520us  1.9520us  3.5530us  [CUDA memset]
+  0.01%  4.2240us         2  2.1120us     672ns  3.5520us  [CUDA memcpy DtoH]
+
+==54604== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.16%  448.34ms         8  56.042ms     499ns  448.33ms  cudaEventCreate
+ 10.23%  52.639ms       102  516.07us  2.2980us  669.76us  cudaEventSynchronize
+  1.35%  6.9676ms        10  696.76us  5.9360us  1.3528ms  cudaMalloc
+  0.45%  2.3022ms       109  21.121us  6.7450us  986.61us  cudaMemcpy
+  0.17%  861.14us       404  2.1310us  1.6900us  13.507us  cudaEventRecord
+  0.16%  798.16us       100  7.9810us  6.8800us  19.593us  cudaLaunch
+  0.15%  753.82us       182  4.1410us     131ns  219.76us  cuDeviceGetAttribute
+  0.13%  650.78us         2  325.39us  319.69us  331.09us  cuDeviceTotalMem
+  0.09%  485.30us         9  53.922us  6.0760us  118.56us  cudaFree
+  0.04%  220.84us       202  1.0930us     918ns  2.3180us  cudaEventElapsedTime
+  0.04%  202.88us      1200     169ns     136ns  3.1670us  cudaSetupArgument
+  0.01%  60.529us         2  30.264us  28.359us  32.170us  cuDeviceGetName
+  0.01%  39.962us         2  19.981us  7.6460us  32.316us  cudaMemset
+  0.01%  30.832us       100     308ns     257ns  1.0180us  cudaConfigureCall
+  0.00%  7.8470us         1  7.8470us  7.8470us  7.8470us  cudaDeviceSynchronize
+  0.00%  3.6230us         3  1.2070us     156ns  3.1650us  cuDeviceGetCount
+  0.00%  1.6830us         6     280ns     143ns     638ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 44 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 658 ms
+Total matches: 8040
+CPU Matching completed in 5567 ms
+==54618== NVPROF is profiling process 54618, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 2500
+Allocated and copied arrays to device in 5.40301 ms
+Ran kernel 100 times in 53.4984 ms
+Created bit arrays 100 times in 6.45971 ms
+Average GPU matching kernel time with 64 threads and 2500 blocks is 0.534984 ms
+Average bit array creation time is 0.0645971 ms
+Freed device memory in 0.473568 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54618== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 2500
+==54618== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.94%  52.152ms       100  521.52us  333.04us  657.59us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.04%  1.0866ms       107  10.155us  1.0880us  863.30us  [CUDA memcpy HtoD]
+  0.01%  5.4400us         2  2.7200us  1.9520us  3.4880us  [CUDA memset]
+  0.01%  4.2560us         2  2.1280us     672ns  3.5840us  [CUDA memcpy DtoH]
+
+==54618== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.00%  432.82ms         8  54.102ms     493ns  432.81ms  cudaEventCreate
+ 10.53%  52.385ms       102  513.58us  2.6030us  661.09us  cudaEventSynchronize
+  0.83%  4.1145ms        10  411.45us  5.3310us  1.3777ms  cudaMalloc
+  0.48%  2.3946ms       109  21.968us  6.7710us  992.27us  cudaMemcpy
+  0.35%  1.7452ms         2  872.58us  859.60us  885.57us  cuDeviceTotalMem
+  0.26%  1.2905ms       182  7.0900us     383ns  320.40us  cuDeviceGetAttribute
+  0.17%  861.75us       404  2.1330us  1.6850us  13.333us  cudaEventRecord
+  0.16%  806.31us       100  8.0630us  7.0440us  18.435us  cudaLaunch
+  0.09%  464.29us         9  51.588us  4.6410us  149.93us  cudaFree
+  0.05%  223.88us       202  1.1080us     901ns  3.4870us  cudaEventElapsedTime
+  0.04%  203.13us      1200     169ns     137ns  3.5700us  cudaSetupArgument
+  0.02%  97.974us         2  48.987us  44.860us  53.114us  cuDeviceGetName
+  0.01%  42.467us         2  21.233us  7.9870us  34.480us  cudaMemset
+  0.01%  32.306us       100     323ns     276ns  1.0370us  cudaConfigureCall
+  0.00%  7.7990us         1  7.7990us  7.7990us  7.7990us  cudaDeviceSynchronize
+  0.00%  6.2930us         3  2.0970us     440ns  5.0800us  cuDeviceGetCount
+  0.00%  4.0180us         6     669ns     433ns  1.3030us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 38 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 657 ms
+Total matches: 8040
+CPU Matching completed in 5568 ms
+==54631== NVPROF is profiling process 54631, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 2500
+Allocated and copied arrays to device in 4.36883 ms
+Ran kernel 100 times in 49.927 ms
+Created bit arrays 100 times in 6.35776 ms
+Average GPU matching kernel time with 128 threads and 2500 blocks is 0.49927 ms
+Average bit array creation time is 0.0635776 ms
+Freed device memory in 0.428 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54631== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 2500
+==54631== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.82%  48.351ms       100  483.51us  308.04us  612.02us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.16%  1.0695ms       107  9.9950us  1.0880us  844.93us  [CUDA memcpy HtoD]
+  0.01%  5.4720us         2  2.7360us  1.9840us  3.4880us  [CUDA memset]
+  0.01%  4.3520us         2  2.1760us     704ns  3.6480us  [CUDA memcpy DtoH]
+
+==54631== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 88.01%  425.88ms         8  53.236ms     550ns  425.88ms  cudaEventCreate
+ 10.04%  48.588ms       102  476.35us  2.2570us  614.82us  cudaEventSynchronize
+  0.64%  3.1155ms        10  311.55us  5.6990us  539.24us  cudaMalloc
+  0.46%  2.2040ms       109  20.219us  6.7990us  962.87us  cudaMemcpy
+  0.18%  856.36us       404  2.1190us  1.7140us  6.9210us  cudaEventRecord
+  0.17%  831.91us       100  8.3190us  7.3660us  17.773us  cudaLaunch
+  0.16%  793.83us       182  4.3610us     133ns  250.31us  cuDeviceGetAttribute
+  0.14%  656.84us         2  328.42us  323.04us  333.81us  cuDeviceTotalMem
+  0.09%  419.43us         9  46.603us  4.6670us  119.36us  cudaFree
+  0.05%  232.99us       202  1.1530us     900ns  8.9760us  cudaEventElapsedTime
+  0.04%  201.91us      1200     168ns     137ns  2.8160us  cudaSetupArgument
+  0.01%  60.779us         2  30.389us  28.508us  32.271us  cuDeviceGetName
+  0.01%  38.843us         2  19.421us  7.6000us  31.243us  cudaMemset
+  0.01%  33.490us       100     334ns     277ns  1.5830us  cudaConfigureCall
+  0.00%  5.9580us         1  5.9580us  5.9580us  5.9580us  cudaDeviceSynchronize
+  0.00%  4.0280us         3  1.3420us     244ns  3.2450us  cuDeviceGetCount
+  0.00%  1.6680us         6     278ns     124ns     567ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 48 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 733 ms
+Total matches: 8040
+CPU Matching completed in 5602 ms
+==54648== NVPROF is profiling process 54648, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 2500
+Allocated and copied arrays to device in 9.79248 ms
+Ran kernel 100 times in 49.44 ms
+Created bit arrays 100 times in 6.39331 ms
+Average GPU matching kernel time with 192 threads and 2500 blocks is 0.4944 ms
+Average bit array creation time is 0.0639331 ms
+Freed device memory in 0.453792 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54648== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 2500
+==54648== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.88%  47.943ms       100  479.43us  308.30us  612.83us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  3.10%  1.5346ms       107  14.341us  1.0560us  1.3092ms  [CUDA memcpy HtoD]
+  0.01%  5.5680us         2  2.7840us  1.9840us  3.5840us  [CUDA memset]
+  0.01%  4.3210us         2  2.1600us     672ns  3.6490us  [CUDA memcpy DtoH]
+
+==54648== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.39%  449.59ms         8  56.198ms     503ns  449.57ms  cudaEventCreate
+  9.37%  48.185ms       102  472.40us  3.3190us  614.33us  cudaEventSynchronize
+  1.52%  7.8235ms        10  782.35us  14.493us  1.3531ms  cudaMalloc
+  0.58%  3.0039ms       109  27.559us  7.8000us  1.5401ms  cudaMemcpy
+  0.33%  1.7053ms         2  852.67us  847.65us  857.68us  cuDeviceTotalMem
+  0.25%  1.2981ms       182  7.1320us     367ns  318.82us  cuDeviceGetAttribute
+  0.17%  879.16us       404  2.1760us  1.7220us  20.363us  cudaEventRecord
+  0.17%  859.12us       100  8.5910us  7.1380us  18.463us  cudaLaunch
+  0.09%  444.90us         9  49.433us  4.8200us  133.23us  cudaFree
+  0.05%  234.62us       202  1.1610us     919ns  4.2630us  cudaEventElapsedTime
+  0.04%  205.22us      1200     171ns     137ns  2.6120us  cudaSetupArgument
+  0.02%  97.564us         2  48.782us  44.607us  52.957us  cuDeviceGetName
+  0.02%  81.167us         2  40.583us  18.563us  62.604us  cudaMemset
+  0.01%  34.216us       100     342ns     290ns  1.2380us  cudaConfigureCall
+  0.00%  7.6890us         1  7.6890us  7.6890us  7.6890us  cudaDeviceSynchronize
+  0.00%  6.5150us         3  2.1710us     594ns  5.2540us  cuDeviceGetCount
+  0.00%  3.4830us         6     580ns     403ns  1.0500us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 48 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 739 ms
+Total matches: 8040
+CPU Matching completed in 5584 ms
+==54665== NVPROF is profiling process 54665, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 2500
+Allocated and copied arrays to device in 4.42963 ms
+Ran kernel 100 times in 49.726 ms
+Created bit arrays 100 times in 6.32493 ms
+Average GPU matching kernel time with 256 threads and 2500 blocks is 0.49726 ms
+Average bit array creation time is 0.0632493 ms
+Freed device memory in 0.425344 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54665== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 2500
+==54665== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.76%  48.207ms       100  482.07us  305.00us  612.02us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.22%  1.0935ms       107  10.219us  1.0560us  870.50us  [CUDA memcpy HtoD]
+  0.01%  5.4400us         2  2.7200us  1.9840us  3.4560us  [CUDA memset]
+  0.01%  4.2240us         2  2.1120us     672ns  3.5520us  [CUDA memcpy DtoH]
+
+==54665== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.51%  405.56ms         8  50.695ms     498ns  405.55ms  cudaEventCreate
+ 10.45%  48.450ms       102  475.00us  3.4380us  614.97us  cudaEventSynchronize
+  0.68%  3.1491ms        10  314.91us  5.5990us  534.93us  cudaMalloc
+  0.48%  2.2023ms       109  20.204us  6.4710us  1.0021ms  cudaMemcpy
+  0.19%  863.44us       404  2.1370us  1.7090us  7.0800us  cudaEventRecord
+  0.17%  795.92us       100  7.9590us  6.9830us  17.637us  cudaLaunch
+  0.17%  766.95us       182  4.2130us     130ns  222.10us  cuDeviceGetAttribute
+  0.14%  655.46us         2  327.73us  324.88us  330.59us  cuDeviceTotalMem
+  0.09%  414.83us         9  46.092us  4.5820us  111.44us  cudaFree
+  0.05%  222.56us       202  1.1010us     917ns  2.5680us  cudaEventElapsedTime
+  0.04%  205.72us      1200     171ns     137ns  3.0380us  cudaSetupArgument
+  0.01%  61.569us         2  30.784us  28.951us  32.618us  cuDeviceGetName
+  0.01%  38.051us         2  19.025us  7.4470us  30.604us  cudaMemset
+  0.01%  32.772us       100     327ns     253ns  1.5900us  cudaConfigureCall
+  0.00%  14.127us         3  4.7090us     203ns  13.637us  cuDeviceGetCount
+  0.00%  6.2930us         1  6.2930us  6.2930us  6.2930us  cudaDeviceSynchronize
+  0.00%  1.6010us         6     266ns     126ns     645ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 46 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 658 ms
+Total matches: 8040
+CPU Matching completed in 5558 ms
+==54678== NVPROF is profiling process 54678, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 5000
+Allocated and copied arrays to device in 4.35453 ms
+Ran kernel 100 times in 51.1099 ms
+Created bit arrays 100 times in 6.36179 ms
+Average GPU matching kernel time with 64 threads and 5000 blocks is 0.511099 ms
+Average bit array creation time is 0.0636179 ms
+Freed device memory in 0.48576 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54678== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 5000
+==54678== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.91%  49.714ms       100  497.14us  314.54us  630.43us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.07%  1.0516ms       107  9.8280us  1.0880us  826.40us  [CUDA memcpy HtoD]
+  0.01%  5.4400us         2  2.7200us  1.9520us  3.4880us  [CUDA memset]
+  0.01%  4.5440us         2  2.2720us     640ns  3.9040us  [CUDA memcpy DtoH]
+
+==54678== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.78%  427.27ms         8  53.408ms     522ns  427.26ms  cudaEventCreate
+ 10.26%  49.942ms       102  489.63us  2.6790us  631.96us  cudaEventSynchronize
+  0.64%  3.1026ms        10  310.26us  5.6820us  535.72us  cudaMalloc
+  0.47%  2.2981ms       109  21.083us  8.1510us  957.68us  cudaMemcpy
+  0.18%  864.92us       404  2.1400us  1.7140us  7.6360us  cudaEventRecord
+  0.16%  796.82us       100  7.9680us  6.9660us  18.289us  cudaLaunch
+  0.16%  762.79us       182  4.1910us     132ns  221.39us  cuDeviceGetAttribute
+  0.13%  654.22us         2  327.11us  324.60us  329.62us  cuDeviceTotalMem
+  0.10%  476.09us         9  52.898us  5.0100us  146.89us  cudaFree
+  0.05%  222.62us       202  1.1020us     902ns  1.8420us  cudaEventElapsedTime
+  0.04%  209.17us      1200     174ns     139ns  2.6080us  cudaSetupArgument
+  0.01%  60.756us         2  30.378us  28.723us  32.033us  cuDeviceGetName
+  0.01%  40.723us         2  20.361us  8.0930us  32.630us  cudaMemset
+  0.01%  35.176us       100     351ns     300ns  1.0430us  cudaConfigureCall
+  0.00%  8.3960us         1  8.3960us  8.3960us  8.3960us  cudaDeviceSynchronize
+  0.00%  3.7480us         3  1.2490us     202ns  3.3000us  cuDeviceGetCount
+  0.00%  1.6520us         6     275ns     148ns     607ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 47 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 657 ms
+Total matches: 8040
+CPU Matching completed in 5562 ms
+==54693== NVPROF is profiling process 54693, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 5000
+Allocated and copied arrays to device in 9.8479 ms
+Ran kernel 100 times in 48.4197 ms
+Created bit arrays 100 times in 7.17158 ms
+Average GPU matching kernel time with 128 threads and 5000 blocks is 0.484197 ms
+Average bit array creation time is 0.0717158 ms
+Freed device memory in 0.45712 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54693== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 5000
+==54693== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.71%  46.821ms       100  468.21us  295.50us  596.34us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  3.27%  1.5844ms       107  14.807us  1.0560us  1.3586ms  [CUDA memcpy HtoD]
+  0.01%  5.4080us         2  2.7040us  1.9520us  3.4560us  [CUDA memset]
+  0.01%  4.1920us         2  2.0960us     672ns  3.5200us  [CUDA memcpy DtoH]
+
+==54693== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 86.64%  415.46ms         8  51.932ms     625ns  415.44ms  cudaEventCreate
+  9.80%  47.006ms       102  460.84us  3.2810us  599.45us  cudaEventSynchronize
+  1.64%  7.8517ms        10  785.17us  14.900us  1.3434ms  cudaMalloc
+  0.66%  3.1764ms       109  29.141us  8.0290us  1.5813ms  cudaMemcpy
+  0.35%  1.7001ms         2  850.06us  845.86us  854.25us  cuDeviceTotalMem
+  0.27%  1.3023ms       182  7.1550us     363ns  330.71us  cuDeviceGetAttribute
+  0.20%  947.46us       404  2.3450us  1.6920us  18.710us  cudaEventRecord
+  0.19%  914.72us       100  9.1470us  7.1660us  38.997us  cudaLaunch
+  0.09%  447.08us         9  49.675us  4.9470us  137.07us  cudaFree
+  0.05%  247.59us       202  1.2250us     918ns  4.2000us  cudaEventElapsedTime
+  0.05%  229.20us      1200     190ns     137ns  5.2430us  cudaSetupArgument
+  0.02%  99.397us         2  49.698us  44.644us  54.753us  cuDeviceGetName
+  0.02%  75.410us         2  37.705us  18.090us  57.320us  cudaMemset
+  0.01%  35.823us       100     358ns     250ns  2.0100us  cudaConfigureCall
+  0.00%  7.6460us         1  7.6460us  7.6460us  7.6460us  cudaDeviceSynchronize
+  0.00%  6.6070us         3  2.2020us     663ns  5.1270us  cuDeviceGetCount
+  0.00%  3.5490us         6     591ns     436ns  1.0100us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 38 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 659 ms
+Total matches: 8040
+CPU Matching completed in 5562 ms
+==54708== NVPROF is profiling process 54708, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 5000
+Allocated and copied arrays to device in 9.1 ms
+Ran kernel 100 times in 48.5243 ms
+Created bit arrays 100 times in 6.3888 ms
+Average GPU matching kernel time with 192 threads and 5000 blocks is 0.485243 ms
+Average bit array creation time is 0.063888 ms
+Freed device memory in 0.470496 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54708== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 5000
+==54708== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.86%  47.028ms       100  470.28us  295.53us  599.03us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.12%  1.0200ms       107  9.5320us  1.0880us  793.18us  [CUDA memcpy HtoD]
+  0.01%  5.4080us         2  2.7040us  1.9520us  3.4560us  [CUDA memset]
+  0.01%  4.1920us         2  2.0960us     672ns  3.5200us  [CUDA memcpy DtoH]
+
+==54708== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.17%  418.39ms         8  52.298ms     549ns  418.38ms  cudaEventCreate
+  9.85%  47.271ms       102  463.44us  2.6080us  602.24us  cudaEventSynchronize
+  1.63%  7.8433ms        10  784.33us  5.7250us  1.3676ms  cudaMalloc
+  0.48%  2.2919ms       109  21.026us  7.8260us  905.28us  cudaMemcpy
+  0.19%  889.54us       404  2.2010us  1.7200us  17.741us  cudaEventRecord
+  0.18%  845.37us       100  8.4530us  7.1700us  18.751us  cudaLaunch
+  0.16%  752.91us       182  4.1360us     129ns  219.52us  cuDeviceGetAttribute
+  0.14%  654.70us         2  327.35us  324.19us  330.52us  cuDeviceTotalMem
+  0.10%  460.61us         9  51.178us  5.1660us  149.69us  cudaFree
+  0.05%  230.11us       202  1.1390us     926ns  2.4850us  cudaEventElapsedTime
+  0.04%  201.60us      1200     167ns     137ns  3.3000us  cudaSetupArgument
+  0.01%  59.301us         2  29.650us  28.133us  31.168us  cuDeviceGetName
+  0.01%  50.917us         2  25.458us  8.7200us  42.197us  cudaMemset
+  0.01%  33.723us       100     337ns     278ns  1.6300us  cudaConfigureCall
+  0.00%  11.325us         1  11.325us  11.325us  11.325us  cudaDeviceSynchronize
+  0.00%  3.5480us         3  1.1820us     164ns  3.1540us  cuDeviceGetCount
+  0.00%  1.4710us         6     245ns     129ns     536ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 38 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 657 ms
+Total matches: 8040
+CPU Matching completed in 5758 ms
+==54721== NVPROF is profiling process 54721, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 5000
+Allocated and copied arrays to device in 8.58358 ms
+Ran kernel 100 times in 49.1714 ms
+Created bit arrays 100 times in 6.41334 ms
+Average GPU matching kernel time with 256 threads and 5000 blocks is 0.491714 ms
+Average bit array creation time is 0.0641334 ms
+Freed device memory in 0.485312 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54721== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 5000
+==54721== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.86%  47.798ms       100  477.98us  300.72us  607.96us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.12%  1.0359ms       107  9.6810us  1.0880us  809.22us  [CUDA memcpy HtoD]
+  0.01%  5.4410us         2  2.7200us  1.9850us  3.4560us  [CUDA memset]
+  0.01%  4.1920us         2  2.0960us     672ns  3.5200us  [CUDA memcpy DtoH]
+
+==54721== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.26%  434.43ms         8  54.304ms     540ns  434.42ms  cudaEventCreate
+  9.65%  48.033ms       102  470.91us  2.3660us  609.52us  cudaEventSynchronize
+  1.47%  7.3401ms        10  734.01us  5.8070us  1.3628ms  cudaMalloc
+  0.46%  2.2756ms       109  20.877us  7.7220us  940.33us  cudaMemcpy
+  0.35%  1.7210ms         2  860.50us  848.78us  872.23us  cuDeviceTotalMem
+  0.26%  1.2918ms       182  7.0970us     387ns  313.06us  cuDeviceGetAttribute
+  0.17%  854.02us       404  2.1130us  1.6850us  13.756us  cudaEventRecord
+  0.17%  835.28us       100  8.3520us  7.3010us  17.823us  cudaLaunch
+  0.10%  476.25us         9  52.916us  4.8180us  152.35us  cudaFree
+  0.04%  220.94us       202  1.0930us     898ns  2.1320us  cudaEventElapsedTime
+  0.04%  200.33us      1200     166ns     136ns  3.1170us  cudaSetupArgument
+  0.02%  97.478us         2  48.739us  46.047us  51.431us  cuDeviceGetName
+  0.01%  39.521us         2  19.760us  7.8830us  31.638us  cudaMemset
+  0.01%  33.340us       100     333ns     285ns  1.0960us  cudaConfigureCall
+  0.00%  8.9660us         1  8.9660us  8.9660us  8.9660us  cudaDeviceSynchronize
+  0.00%  6.6970us         3  2.2320us     517ns  5.2270us  cuDeviceGetCount
+  0.00%  3.6180us         6     603ns     444ns  1.0500us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 45 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 657 ms
+Total matches: 8040
+CPU Matching completed in 5558 ms
+==54734== NVPROF is profiling process 54734, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 10000
+Allocated and copied arrays to device in 9.85821 ms
+Ran kernel 100 times in 52.0681 ms
+Created bit arrays 100 times in 7.14477 ms
+Average GPU matching kernel time with 64 threads and 10000 blocks is 0.520681 ms
+Average bit array creation time is 0.0714477 ms
+Freed device memory in 0.457376 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54734== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 64 -b 10000
+==54734== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.94%  50.503ms       100  505.03us  322.73us  635.93us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  3.04%  1.5855ms       107  14.818us  1.0560us  1.3560ms  [CUDA memcpy HtoD]
+  0.01%  5.4400us         2  2.7200us  1.9520us  3.4880us  [CUDA memset]
+  0.01%  4.1600us         2  2.0800us     672ns  3.4880us  [CUDA memcpy DtoH]
+
+==54734== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.07%  455.41ms         8  56.926ms     560ns  455.39ms  cudaEventCreate
+  9.70%  50.713ms       102  497.18us  3.6020us  639.27us  cudaEventSynchronize
+  1.50%  7.8648ms        10  786.48us  14.960us  1.3501ms  cudaMalloc
+  0.61%  3.1823ms       109  29.195us  8.5010us  1.5738ms  cudaMemcpy
+  0.30%  1.5851ms         2  792.56us  722.06us  863.05us  cuDeviceTotalMem
+  0.25%  1.2864ms       182  7.0670us     366ns  322.00us  cuDeviceGetAttribute
+  0.18%  934.43us       404  2.3120us  1.7170us  13.230us  cudaEventRecord
+  0.18%  915.40us       100  9.1530us  7.3460us  40.253us  cudaLaunch
+  0.09%  448.60us         9  49.843us  4.2080us  141.69us  cudaFree
+  0.05%  251.24us       202  1.2430us     914ns  4.4930us  cudaEventElapsedTime
+  0.04%  230.26us      1200     191ns     136ns  5.3000us  cudaSetupArgument
+  0.02%  97.667us         2  48.833us  44.790us  52.877us  cuDeviceGetName
+  0.02%  84.834us         2  42.417us  20.107us  64.727us  cudaMemset
+  0.01%  36.657us       100     366ns     277ns  1.8860us  cudaConfigureCall
+  0.00%  8.2740us         1  8.2740us  8.2740us  8.2740us  cudaDeviceSynchronize
+  0.00%  6.5260us         3  2.1750us     713ns  5.0570us  cuDeviceGetCount
+  0.00%  3.6340us         6     605ns     423ns  1.1240us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 45 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 700 ms
+Total matches: 8040
+CPU Matching completed in 5593 ms
+==54747== NVPROF is profiling process 54747, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 10000
+Allocated and copied arrays to device in 9.22096 ms
+Ran kernel 100 times in 48.8608 ms
+Created bit arrays 100 times in 6.31664 ms
+Average GPU matching kernel time with 128 threads and 10000 blocks is 0.488608 ms
+Average bit array creation time is 0.0631664 ms
+Freed device memory in 0.4728 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54747== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 128 -b 10000
+==54747== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 97.82%  47.512ms       100  475.12us  302.38us  603.19us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  2.16%  1.0488ms       107  9.8010us  1.0560us  817.67us  [CUDA memcpy HtoD]
+  0.01%  5.4400us         2  2.7200us  1.9840us  3.4560us  [CUDA memset]
+  0.01%  4.1600us         2  2.0800us     672ns  3.4880us  [CUDA memcpy DtoH]
+
+==54747== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 86.99%  423.53ms         8  52.941ms     525ns  423.52ms  cudaEventCreate
+  9.80%  47.692ms       102  467.57us  2.3650us  605.08us  cudaEventSynchronize
+  1.61%  7.8283ms        10  782.83us  6.2520us  1.3518ms  cudaMalloc
+  0.48%  2.3392ms       109  21.460us  7.6230us  1.0019ms  cudaMemcpy
+  0.43%  2.0980ms       182  11.527us     132ns  1.4069ms  cuDeviceGetAttribute
+  0.18%  854.27us       404  2.1140us  1.7060us  12.850us  cudaEventRecord
+  0.17%  833.74us       100  8.3370us  7.4590us  19.591us  cudaLaunch
+  0.14%  657.67us         2  328.84us  324.04us  333.63us  cuDeviceTotalMem
+  0.09%  461.90us         9  51.322us  4.4070us  156.36us  cudaFree
+  0.05%  233.70us       202  1.1560us     937ns  1.8410us  cudaEventElapsedTime
+  0.04%  201.98us      1200     168ns     137ns  2.4800us  cudaSetupArgument
+  0.01%  53.937us         2  26.968us  26.937us  27.000us  cuDeviceGetName
+  0.01%  38.770us       100     387ns     334ns  1.5220us  cudaConfigureCall
+  0.01%  38.171us         2  19.085us  7.6270us  30.544us  cudaMemset
+  0.00%  8.1730us         1  8.1730us  8.1730us  8.1730us  cudaDeviceSynchronize
+  0.00%  2.7430us         3     914ns     205ns  2.2930us  cuDeviceGetCount
+  0.00%  1.4460us         6     241ns     141ns     448ns  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 45 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 663 ms
+Total matches: 8040
+CPU Matching completed in 5563 ms
+==54776== NVPROF is profiling process 54776, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 10000
+Allocated and copied arrays to device in 10.0419 ms
+Ran kernel 100 times in 49.1592 ms
+Created bit arrays 100 times in 6.80659 ms
+Average GPU matching kernel time with 192 threads and 10000 blocks is 0.491592 ms
+Average bit array creation time is 0.0680659 ms
+Freed device memory in 0.454368 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54776== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 192 -b 10000
+==54776== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.49%  47.789ms       100  477.89us  305.64us  605.66us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  3.49%  1.7263ms       107  16.133us  1.0560us  1.4963ms  [CUDA memcpy HtoD]
+  0.01%  5.4410us         2  2.7200us  1.9520us  3.4890us  [CUDA memset]
+  0.01%  4.1280us         2  2.0640us     640ns  3.4880us  [CUDA memcpy DtoH]
+
+==54776== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 87.18%  440.87ms         8  55.108ms     590ns  440.85ms  cudaEventCreate
+  9.49%  48.014ms       102  470.72us  3.5990us  609.00us  cudaEventSynchronize
+  1.55%  7.8330ms        10  783.30us  14.907us  1.3440ms  cudaMalloc
+  0.62%  3.1304ms       109  28.719us  7.8760us  1.7358ms  cudaMemcpy
+  0.34%  1.7376ms         2  868.82us  860.21us  877.43us  cuDeviceTotalMem
+  0.26%  1.2946ms       182  7.1130us     403ns  317.74us  cuDeviceGetAttribute
+  0.17%  871.08us       404  2.1560us  1.7230us  14.250us  cudaEventRecord
+  0.16%  823.74us       100  8.2370us  7.1630us  41.961us  cudaLaunch
+  0.09%  444.50us         9  49.389us  4.1550us  141.81us  cudaFree
+  0.04%  223.57us       202  1.1060us     922ns  4.9100us  cudaEventElapsedTime
+  0.04%  213.19us      1200     177ns     137ns  5.7830us  cudaSetupArgument
+  0.02%  98.780us         2  49.390us  45.157us  53.623us  cuDeviceGetName
+  0.02%  81.497us         2  40.748us  19.157us  62.340us  cudaMemset
+  0.01%  32.167us       100     321ns     255ns  2.0570us  cudaConfigureCall
+  0.00%  7.4920us         1  7.4920us  7.4920us  7.4920us  cudaDeviceSynchronize
+  0.00%  6.7410us         3  2.2470us     590ns  5.3170us  cuDeviceGetCount
+  0.00%  4.2440us         6     707ns     520ns  1.3000us  cuDeviceGet
+
+Reading pattern file inputs/pattern_groups.bin
+Finished reading inputs/pattern_groups.bin in 45 ms
+Reading event file inputs/pileup_200_hit_events.bin
+Finished reading inputs/pileup_200_hit_events.bin in 659 ms
+Total matches: 8040
+CPU Matching completed in 5561 ms
+==54792== NVPROF is profiling process 54792, command: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 10000
+Allocated and copied arrays to device in 9.86422 ms
+Ran kernel 100 times in 51.8149 ms
+Created bit arrays 100 times in 6.58483 ms
+Average GPU matching kernel time with 256 threads and 10000 blocks is 0.518149 ms
+Average bit array creation time is 0.0658483 ms
+Freed device memory in 0.465696 ms
+Comparing match results...
+nMatches comparison passed
+patternIds comparison passed
+Comparison of match results passed!
+==54792== Profiling application: ./bin/patternTest -e inputs/pileup_200_hit_events.bin -t 256 -b 10000
+==54792== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 96.96%  50.431ms       100  504.31us  330.67us  634.68us  matchByBlockMulti(int const *, unsigned char const *, unsigned int const *, unsigned int const *, short const *, int, int*, int*, int, int const *, int const *, int const *)
+  3.02%  1.5723ms       107  14.694us  1.0560us  1.3428ms  [CUDA memcpy HtoD]
+  0.01%  5.5050us         2  2.7520us  1.9840us  3.5210us  [CUDA memset]
+  0.01%  4.1920us         2  2.0960us     672ns  3.5200us  [CUDA memcpy DtoH]
+
+==54792== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 86.42%  429.44ms         8  53.680ms     567ns  429.42ms  cudaEventCreate
+ 10.19%  50.657ms       102  496.64us  3.5680us  637.65us  cudaEventSynchronize
+  1.58%  7.8718ms        10  787.18us  14.590us  1.3481ms  cudaMalloc
+  0.63%  3.1162ms       109  28.588us  8.1350us  1.5819ms  cudaMemcpy
+  0.34%  1.7128ms         2  856.40us  850.55us  862.24us  cuDeviceTotalMem
+  0.26%  1.2918ms       182  7.0970us     366ns  321.53us  cuDeviceGetAttribute
+  0.18%  888.16us       404  2.1980us  1.7210us  14.187us  cudaEventRecord
+  0.17%  847.31us       100  8.4730us  7.2290us  39.963us  cudaLaunch
+  0.09%  455.54us         9  50.615us  4.2800us  145.75us  cudaFree
+  0.05%  225.44us       202  1.1160us     901ns  4.2530us  cudaEventElapsedTime
+  0.04%  205.82us      1200     171ns     136ns  4.7640us  cudaSetupArgument
+  0.02%  96.813us         2  48.406us  44.903us  51.910us  cuDeviceGetName
+  0.02%  75.936us         2  37.968us  18.033us  57.903us  cudaMemset
+  0.01%  36.390us       100     363ns     296ns  2.0300us  cudaConfigureCall
+  0.00%  7.8020us         1  7.8020us  7.8020us  7.8020us  cudaDeviceSynchronize
+  0.00%  6.6130us         3  2.2040us     553ns  5.4500us  cuDeviceGetCount
+  0.00%  3.5670us         6     594ns     370ns     953ns  cuDeviceGet

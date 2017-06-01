@@ -1,0 +1,19 @@
+This directory contains outputs from the NVIDIA profiler for various numbers of
+blocks, threads and versions of the GPU pattern matching code.  Each directory
+contains runs of a different version of the code. Each directory contains runs
+for 64, 128, 192 and 256 threads and both single group/block implementations
+and multiple block implementations for 500, 1000, 2500, 5000 and 10000 blocks
+unless otherwise stated. Directories/Versions are:
+
+no_bitarray - first iteration, before bit arrays were introduced.
+before_shared_bitarray - after implementation of bit arrays, but while they are still stored in global memory
+before_lyrs - after moving bit array to shared memory, but each pattern still requires nLayers threads to match
+match_by_layer - each thread now matches only 1 pattern (each thread must loop through layers)
+less_shared_mem - for multiple groups/block shared memory has been reduced, allowing more blocks to run on the same SM
+less_shared_mem_blocks - same as above but includes runs for 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 7000, 8000, 9000, 10000 blocks
+equal_ngroups - distribution of pattern groups to blocks has been changed so there are an equal number of groups in each block
+equal_ngroups_blocks - same as above but includes runs for 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 7000, 8000, 9000, 10000 blocks
+
+read_and_plot.py reads variables (such as kernel run times) from the above directories and plots graphs
+read_and_plot_block.py reads variables (such as kernel run times) from the above directories with suffix _blocks and plots graphs with more varied block numbers
+distribution_hist plots the distributions of groups/patterns to blocks as a histogram
