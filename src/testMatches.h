@@ -16,10 +16,11 @@ using namespace std;
 inline void compareMatches(MatchResults mr1, MatchResults mr2) {
     cout << "Comparing match results..." << endl;
 
-     //Reorder and compare patternIds
+     // Reorder patternIds
      sort(mr1.patternIds.begin(), mr1.patternIds.end());
      sort(mr2.patternIds.begin(), mr2.patternIds.end());
 
+     // Compare patternIds and record index where the comparison failed
      int failedIndex = -1;
      for (int i = 0; i < mr1.nMatches; i++) {
           if (mr1.patternIds[i] != mr2.patternIds[i]) {
@@ -28,6 +29,7 @@ inline void compareMatches(MatchResults mr1, MatchResults mr2) {
           }
      }
 
+    // Print test results
     if (mr1.nMatches == mr2.nMatches) {
         cout << "nMatches comparison passed" << endl;
 

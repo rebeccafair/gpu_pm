@@ -18,10 +18,18 @@ using namespace std;
 void createGpuContext(const PatternContainer& p, const EventContainer& e, GpuContext& ctx) {
     cudaError_t err = cudaSuccess;
 
-    // For all group/event begins, calculate indices that are pointed to
+    // For hit array group begins, calculate indices that are pointed to
+    // (To avoid having to transfer pointers to GPU)
     vector<unsigned int> h_hitArrayGroupIndices = pointerToIndex(p.hitArrayGroupBegin, p.hitArray);
 
-    // Get detector elements that are in patterns (used for creating bit arrays)
+    /* Get detector elements that are in patterns (used for creating bit arrays)
+     * As hash IDs go up to ~50,000 but the actual number of detector elements in the pattern set
+     * is only ~350, memory is saved by having a vector of shorts of length ~50,000, which can be
+     * used to access the detector element number in the pattern set (0-~350), which can be used to
+     * access the correct bit array element. Now only 350*3 unsigned ints must be stored for the bit array,
+     * rather than 50000*3. Dictionary-type lookup (i.e. bitArray["hashId"]) is not (yet?) supported on
+     * the GPU
+     */
     vector <short> hashIdToIndex;
     int nDetectorElems = 0;
     int maxHashId = 50000;
@@ -122,7 +130,7 @@ void runGpuMatching(const PatternContainer& p, const EventContainer& e, GpuConte
         if (err != cudaSuccess) cerr << "Error: groups not copied to device\n" << cudaGetErrorString(err) << endl;
     }
 
-    // Get nDetectorElems
+    // Get nDetectorElems (required to calculate bit arrays)
     vector <short> hashIdToIndex;
     int nDetectorElems = 0;
     int maxHashId = 50000;
@@ -442,7 +450,7 @@ __global__ void matchByBlockSingle(const int *hashId_array, const unsigned char 
     __syncthreads();
 
     // Get first nLayers threads to set bit array index, lyrHashId, and check if there
-    // are enough matches in the group if bit array > 0 there are hits for that 
+    // are enough matches in the group. If bit array > 0 there are hits for that 
     // detector element for this event
     if (threadIdx.x < nLayers) {
         int lyrHashId = hashId_array[grp*nLayers + lyr];
@@ -621,4 +629,3 @@ __global__ void matchByBlockMulti(const int *hashId_array, const unsigned char *
    }
 
 }
-

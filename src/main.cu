@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
     string patternFile = "inputs/pattern_groups.bin";
     string eventFile = "inputs/single_track_hit_events.bin";
-    int nThreads = 64;
+    int nThreads = 128;
     int nBlocks = 0;
     char opt;
 
@@ -48,23 +48,15 @@ int main(int argc, char* argv[]) {
     //matchByPatterns(p, e, cpuResults);
     //printMatchResults(cpuResults);
 
-    // Perform gpu setup and pattern matching with multiple groups per block
+    // Perform gpu setup and pattern matching
     GpuContext ctx1;
     MatchResults gpuResults1;
     createGpuContext(p, e, ctx1);
     runGpuMatching(p, e, ctx1, gpuResults1, nThreads, nBlocks);
     deleteGpuContext(ctx1);
 
-    // Perform gpu setup and pattern matching by pattern block
-    GpuContext ctx2;
-    MatchResults gpuResults2;
-    createGpuContext(p, e, ctx2);
-    runGpuMatching(p, e, ctx2, gpuResults2, nThreads);
-    deleteGpuContext(ctx2);
-
     // Compare cpu/gpu results
     compareMatches(cpuResults, gpuResults1);
-    compareMatches(cpuResults, gpuResults2);
 
     return 0;
 }
