@@ -158,7 +158,7 @@ void matchByEvents(const PatternContainer& p, const EventContainer& e, MatchResu
             // Get total number of matches for this event
             for (int patt = 0; patt < p.nPattInGrp[grp]; patt++) {
                 if (nMatches[patt] >= nRequiredMatches) {
-                    //cout << "Match found, event: " << event << " grp: " << grp << " patt: " << patt << endl;
+                    //cout << "Match found, event: " << event << " grp: " << grp << " patt: " << patt << " pattId:" << (p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers + patt << endl;
                     mr.patternIds.push_back(((p.hitArrayGroupBegin[grp] - p.hitArrayGroupBegin[0])/p.header.nLayers) + patt);
                     nEventMatches[event]++;
                 }
